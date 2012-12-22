@@ -1,3 +1,17 @@
+#ifndef _INVERT_H_
+#define _INVERT_H_
+
+#define DEBUG	0
+
+#include <stdlib.h>
+#include <strings.h>
+
+#include <metis.h>
+
+#if (DEBUG > 0)
+#include <stdio.h>
+#endif
+
 /*
  * input:
  * x2y			: mapping from x to y
@@ -13,27 +27,17 @@
  */
 void invertMapping (int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset);
 
-/*
- * Invert the mapping, from e2v to v2e
- *
- * input: 
- * e2v			: mapping from edges to vertices
- * nvertices	: number of vertices
- * map_entries	: number of entries in e2v
+
+/* input:
+ * nvertices	: #vertices
+ * nparts		: number of partitions requested to metis
+ * xadj			: vertices offsets in adjncy - standard CSR format
+ * adjncy		: v2v mapping - standard CSR format
  * 
  * output:
- * v2e			: mapping from vertices to edges
- * offset		: edges offset in v2e    
- * adjncy		: mapping from vertices to vertices
- * vertex_zero	: == 0 means vertex numbering starts from 1
+ * *part		: part[i] == partition of vertex 1, computed by metis
  */
-void invertMappingEV (int* e2v, int nvertices, int map_entries, int* v2e, int* offset, int* adjncy, int vertex_zero);
-
-/*
- * 
- *
- */
-int metisPartition (int nvertices, int _nparts, int* xadj, int* adjncy, int** part);
+int metisPartition (int nvertices, int nparts, idx_t* xadj, idx_t* adjncy, int** part);
 
 /*
  * input:
@@ -45,5 +49,6 @@ int metisPartition (int nvertices, int _nparts, int* xadj, int* adjncy, int** pa
  * partitions		: vertex -> partitionID
  * colors			: partitionID -> color 
  */
-void partitionAndColor (int nvertices, int partitionSize, ve_map* v2e, int** _partitions, int** _colors);
+void partitionAndColor (int nvertices, int partitionSize, int* v2e, int* offset, int** _partitions, int** _colors);
 
+#endif

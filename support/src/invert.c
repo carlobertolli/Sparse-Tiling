@@ -1,32 +1,8 @@
-
-#include <stdlib.h>
-#include <strings.h>
-
-#include <metis.h>
-
-
-#define DEBUG		1
+#include "../include/invert.h"
 
 #define MAX(A, B)	(A > B) ? A : B
 
-//#if (DEBUG > 0)
-#include <stdio.h>
-//#endif
 
-
-/*
- * input:
- * x2y			: mapping from x to y
- * size_x2y		: size of the mapping x2y
- * ny			: size of the destination set y
- * onex_ny		: number of y elements for each x elements (eg x2y == e2v -> onex_ny = 2)
- * x_zero		: == true -> x numbering starts from 0 
- *
- * output:
- * y2x			: mapping from y to x
- * y2adj		: mapping from y to adjacent y elements (can be passed NULL)
- * offset		: offset of the x elements for each y element in y2x (size == ny + 1)
- */
 void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset  )
 {
 	offset[0] = 0;
@@ -39,12 +15,12 @@ void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, in
 	for ( int i = 1; i < ny + 1; i++ )
 		offset[i + x_zero] += offset[i - 1  + x_zero];
 	
-	/*
-	 #if (DEBUG > 1) 
+	
+#if (DEBUG > 0) 
 	 for ( int i = 0; i < ny + 1; i++ )
-	 printf ("Y element %d : %d\n", i + 1 - x_zero, offset[i] );
-	 #endif
-	 */
+		 printf ("Y element %d : %d\n", i + 1 - x_zero, offset[i] );
+#endif
+	 
 	
 	int* inserted = (int*) calloc ( ny, sizeof(int) ); //relative offset when inserting into y2x and adjncy
 	
@@ -78,66 +54,14 @@ void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, in
 	free (inserted);
 }
 
-/*
- * Invert the mapping, from e2v to v2e
- *
- * input: 
- * e2v			: mapping from edges to vertices
- * nvertices	: number of vertices
- * map_entries	: number of entries in e2v
- * 
- * output:
- * v2e			: mapping from vertices to edges
- * offset		: edges offset in v2e    
- * adjncy		: mapping from vertices to vertices
- * vertex_zero	: == 0 means vertex numbering starts from 1
- */
-void invertMappingEV ( int* e2v, int nvertices, int map_entries, int* v2e, int* offset, int* adjncy, int vertex_zero  )
-{
-	offset[0] = 0;
-	vertex_zero = ( vertex_zero ) ? 1 : 0; //takes into account vertices numbering starting either from 0 or 1
-	 
-	//offset[i] counts the number of incident edges for each vertex i-1. 
-	for ( int i = 0; i < map_entries; i++ )
-		offset[e2v[i] + vertex_zero] ++;
-	
-	for ( int i = 1; i < nvertices + 1; i++ )
-		offset[i + vertex_zero] += offset[i - 1  + vertex_zero];
-	
-#if (DEBUG > 1) 
-	for ( int i = 0; i < nvertices + 1; i++ )
-		printf ("VERTEX %d : %d\n", i+1-vertex_zero, offset[i] );
-#endif	
-	
-	int* inserted = (int*) calloc ( nvertices, sizeof(int) ); //relative offset when inserting into v2e and adjncy
-	for ( int i = 0; i < map_entries; i += 2 )
-	{
-		int v1 = e2v[i];
-		int v2 = e2v[i + 1];
-		int edge = i/2 + 1;
-		
-		//computes v2e
-		v2e [offset[v1 - 1 + vertex_zero] + inserted[v1 - 1 + vertex_zero]] = edge;
-		v2e [offset[v2 - 1 + vertex_zero] + inserted[v2 - 1 + vertex_zero]] = edge;	
-		
-		//computes adjncy
-		adjncy [offset[v1 - 1 + vertex_zero] + inserted[v1 - 1 + vertex_zero]] = v2;
-		adjncy [offset[v2 - 1 + vertex_zero] + inserted[v2 - 1 + vertex_zero]] = v1;
-		
-		inserted[v1 - 1 + vertex_zero]++;
-		inserted[v2 - 1 + vertex_zero]++;
-	}
-	
-	free (inserted);
-}
 
 
-int metisPartition ( int nvertices, int _nparts, int* xadj, int* adjncy, int** part  )
+int metisPartition ( int nvertices, int _nparts, idx_t* xadj, idx_t* adjncy, int** part  )
 {
 	//input
-	idx_t nvtxs	 = (idx_t) nvertices; // #vertices in the graph
-	idx_t ncon	 = 1;		  // #balancing constraint
-	idx_t nparts = (idx_t) _nparts;	  // #graph partitions
+	idx_t nvtxs	 = (idx_t) nvertices;	// #vertices in the graph
+	idx_t ncon	 = 1;					// #balancing constraint
+	idx_t nparts = (idx_t) _nparts;		// #graph partitions
 
 	idx_t options[METIS_NOPTIONS];
 	
@@ -148,25 +72,17 @@ int metisPartition ( int nvertices, int _nparts, int* xadj, int* adjncy, int** p
 	//output
 	idx_t objval;	// edge-cut 
 	idx_t* _part = (idx_t*) malloc( nvtxs * sizeof (idx_t)); //partition array 
-
+	
 	//computes the partitioning
 	int result = METIS_PartGraphKway( &nvtxs, &ncon, xadj, adjncy, NULL, NULL, NULL, &nparts, NULL, NULL, options, &objval, _part );
-
+	
 	*part = (int*) _part;
 	return result;
 }
 
-/*
- * input:
- * nvertices		: #vertices
- * v2e				: map v2e
- * partitionSize	: size requested for vertex partitions 
- * 
- * output:
- * partitions		: vertex -> partitionID
- * colors			: partitionID -> color 
- */
-void partitionAndColor ( int nvertices, int partitionSize, ve_map* v2e, int** _partitions, int** _colors )
+
+
+void partitionAndColor ( int nvertices, int partitionSize, int* v2e, int* offset, int** _partitions, int** _colors )
 {
     // obtain number of partitions needed TODO: fix size
     int numberOfPartitions = nvertices / partitionSize + nvertices % partitionSize;
@@ -197,7 +113,7 @@ void partitionAndColor ( int nvertices, int partitionSize, ve_map* v2e, int** _p
     int ncolor = 0;
     int ncolors = 0;
     int prev_offset, next_offset;
-    int to_size = v2e->offset[nvertices];
+    int to_size = offset[nvertices];
 	
     // allocate and zero out 
     int* work = (int*) malloc ( to_size * sizeof(int) );
@@ -229,10 +145,10 @@ void partitionAndColor ( int nvertices, int partitionSize, ve_map* v2e, int** _p
 				unsigned int mask = 0;
 				
 				for ( int e = prev_offset; e < next_offset; e++ )
-					for ( int j = 0; j < (v2e->offset[e + 1] - v2e->offset[e]); j++ )  
-						mask |= work[v2e->map[v2e->offset[e] + j]-1]; // set bits of mask
+					for ( int j = 0; j < (offset[e + 1] - offset[e]); j++ )  
+						mask |= work[v2e[offset[e] + j]-1]; // set bits of mask
 				
-#if (DEBUG > 1) 
+#if (DEBUG > 0) 
 				printf ("WORK LOADED: [ ");
 				for ( int i = 0; i < to_size; i++ )
 					printf ("%d ", work[i] );
@@ -251,8 +167,8 @@ void partitionAndColor ( int nvertices, int partitionSize, ve_map* v2e, int** _p
 					ncolors = MAX( ncolors, ncolor + color + 1 );
 					
 					for ( int e = prev_offset; e < next_offset; e++ )
-						for ( int j = 0; j < (v2e->offset[e + 1] - v2e->offset[e]); j++ )  
-							work[v2e->map[v2e->offset[e] + j] - 1] |= mask; 
+						for ( int j = 0; j < (offset[e + 1] - offset[e]); j++ )  
+							work[v2e[offset[e] + j] - 1] |= mask; 
 					
 				}
 			}

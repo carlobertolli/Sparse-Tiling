@@ -1,8 +1,8 @@
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 
-#include <invert.h>
+#include "invert.h"
 
 int main ()
 {
@@ -24,20 +24,18 @@ int main ()
 	int* adjncy = (int*) malloc ( map_entries * sizeof(int) );
 	
 	//invert mapping, i.e. creates v2e mapping
-	invertMappingEV ( e2v, nvertices, map_entries, v2e, offset, adjncy, 1 );
+	invertMapping ( e2v, map_entries, nvertices, 2, 1, v2e, adjncy, offset );
 	
-#if (DEBUG > 0)
 	printf ( "v2e : [" );
 	for ( int i = 0; i < map_entries; i++ )
 	{
 		printf ( " %d ", v2e[ i ] );
 	}
 	printf (" ]\n");
-#endif
 	
 	//call METIS to partition the graph
 	int* metPartitions;
-	int result = metisPartition ( nvertices, 2, offset, adjncy, &metPartitions );
+	int result = metisPartition ( nvertices, 2, (idx_t*) offset, (idx_t*) adjncy, &metPartitions );
 	
 	if ( result != METIS_OK ) 
 	{
@@ -45,12 +43,9 @@ int main ()
 		return -1;
 	}
 
-#if (DEBUG > 0)
 	for ( int i = 0; i < nvertices; i++ )
 		printf ("vertex %d : partition %d\n", i, metPartitions[i]);
 	printf ("\n");
-#endif
-	
 
 	//compute coloring
 	int n_partitions = nvertices / part_size + nvertices % part_size;
@@ -58,18 +53,12 @@ int main ()
 	int* partitions; 
 	int* colors;	 
 	
-	ve_map _v2e;
-	_v2e.map 	= v2e;
-	_v2e.offset = offset;
-	
-	partitionAndColor ( nvertices, 2, &_v2e, &partitions, &colors );
+	partitionAndColor ( nvertices, 2, v2e, offset, &partitions, &colors );
 
-#if (DEBUG > 0)
 	printf ("COLORS: \n");
 	for ( int i = 0; i < n_partitions; i++ )
 	    printf ("Partition: %d, Color: %d\n", partitions[i * 2], colors[i]);
 	printf ("\n");
-#endif
 
 	return 0;
 }

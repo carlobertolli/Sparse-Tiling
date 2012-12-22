@@ -2,8 +2,8 @@
 #
 # The following environment variables are required:
 #
-# ST_COMPILER       - Compiler toolchain: currently supports gnu or intel
-# ST_INSTALL_PATH  - Sparse Tiling support for OP2 base directory
+ST_COMPILER     = gnu
+ST_INSTALL_PATH = ..
 #
 
 #
@@ -27,24 +27,24 @@ DEBUG_FLAGS = -g #-O2
 
 # All compilers define CC and FC plus compiler-specific macros
 ifeq ($(ST_COMPILER),gnu)
-  F_INC_MOD       = $(F_OP2_MOD)/gnu
-  CC              = gcc
-  CFLAGS          = -std=c99 -Wall -fPIC -pedantic -pipe $(DEBUG_FLAGS)
-  FC              = gfortran
-  FFLAGS          = -J$(F_INC_MOD) -Wall -pedantic -pipe $(DEBUG_FLAGS)
-	MPICC						= $(CC) -I$(MPI_INC) -L$(MPI_LIB)
-	MPIF90					= $(FC) -I$(MPI_INC) -L$(MPI_LIB)
+	F_INC_MOD       = $(F_OP2_MOD)/gnu
+	CC              = gcc
+	CFLAGS          = -std=c99 -Wall -fPIC -pedantic -pipe $(DEBUG_FLAGS)
+	FC              = gfortran
+	FFLAGS          = -J$(F_INC_MOD) -Wall -pedantic -pipe $(DEBUG_FLAGS)
+	MPICC			= $(CC) -I$(MPI_INC) -L$(MPI_LIB)
+	MPIF90			= $(FC) -I$(MPI_INC) -L$(MPI_LIB)
 	NO_MPI_MACRO    = -DNO_MPI
 else
 ifeq ($(ST_COMPILER),intel)
-  F_INC_MOD       = $(F_OP2_MOD)/intel
-  CC              = icc
-  CFLAGS          = -std=c99 -Wall -Werror $(DEBUG_FLAGS)
-  FC              = ifort
-  FFLAGS          = -module $(F_INC_MOD) $(DEBUG_FLAGS)
-  MPICC		  = mpicc
-  MPIF90	  = mpif90
-  NO_MPI_MACRO    = -D NO_MPI
+	F_INC_MOD       = $(F_OP2_MOD)/intel
+	CC              = icc
+	CFLAGS          = -std=c99 -Wall -Werror $(DEBUG_FLAGS)
+	FC              = ifort
+	FFLAGS          = -module $(F_INC_MOD) $(DEBUG_FLAGS)
+	MPICC			= mpicc
+	MPIF90			= mpif90
+	NO_MPI_MACRO    = -D NO_MPI
 else
 print:
 	@echo "unrecognised value for ST_COMPILER"
@@ -55,6 +55,7 @@ endif
 .PHONY: clean directories
 
 ALLTARGETS      = st-op2
+
 all: $(ALLTARGETS)
 
 directories:
@@ -67,8 +68,7 @@ st-op2: $(ST_OP2_SRC)/invert.c \
 	$(ST_OP2_SRC)/invert.c \
 	directories
 	$(CC) $(CFLAGS) -I$(ST_OP2_INC) -c $(ST_OP2_SRC)/invert.c -o $(ST_OP2_OBJ)/invert.o
-	ar -r $(F_OP2_LIB)/libst_op2.a \
-	$(ST_OP2_OBJ)/invert.o
+	ar -r $(ST_OP2_LIB)/libst_op2.a $(ST_OP2_OBJ)/invert.o
 
 clean:
 	-rm -if $(ST_OP2_OBJ)/*.o

@@ -1,13 +1,19 @@
+ST_INSTALL_PATH = ../support
 
-CC = gcc
+SUPPORT = $(ST_INSTALL_PATH)/lib
+INCLUDE = $(ST_INSTALL_PATH)/include
 
-SUPPORT=$(ST_INSTALL_PATH)/lib
+CC		= gcc
 
-EXEC = testPartitioningColoring
+LFLAGS	= -lmetis
+EXEC	= testPartitioningColoring
 
+CFLAGS	= -Wall -pedantic -std=c99  
 
-all: testColoringPartitioning
+all: library testPartitioning
+	
+library:
+	make -f $(ST_INSTALL_PATH)/Makefile
 
-testColoringPartitioing: testColoringPartitioning.c
-	$(CC) -Wall -pedantic testColoringPartitioning.c -o $(EXEC) -lst-op2
-
+testPartitioning:
+	$(CC) $(CFLAGS) -I$(INCLUDE) testColoringPartitioning.c $(SUPPORT)/libst_op2.a $(LFLAGS)
