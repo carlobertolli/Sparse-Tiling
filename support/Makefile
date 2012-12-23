@@ -64,11 +64,13 @@ directories:
 
 # does not depend on reference.h because we don't need the op_par_loop templated
 # implementation, but our own implementation
-st-op2: $(ST_OP2_SRC)/invert.c \
+st-op2: $(ST_OP2_SRC)/invert.c $(ST_OP2_SRC)/inspector.c \
 	$(ST_OP2_SRC)/invert.c \
 	directories
 	$(CC) $(CFLAGS) -I$(ST_OP2_INC) -c $(ST_OP2_SRC)/invert.c -o $(ST_OP2_OBJ)/invert.o
-	ar -r $(ST_OP2_LIB)/libst_op2.a $(ST_OP2_OBJ)/invert.o
+	$(CC) $(CFLAGS) -I$(ST_OP2_INC) -c $(ST_OP2_SRC)/tile.c -o $(ST_OP2_OBJ)/tile.o
+	$(CC) $(CFLAGS) -I$(ST_OP2_INC) -c $(ST_OP2_SRC)/inspector.c -o $(ST_OP2_OBJ)/inspector.o
+	ar -r $(ST_OP2_LIB)/libst_op2.a $(ST_OP2_OBJ)/invert.o $(ST_OP2_OBJ)/inspector.o $(ST_OP2_OBJ)/tile.o
 
 clean:
 	-rm -if $(ST_OP2_OBJ)/*.o

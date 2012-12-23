@@ -10,10 +10,16 @@ EXEC	= testPartitioningColoring
 
 CFLAGS	= -Wall -pedantic -std=c99  
 
-all: library testPartitioning
+all: library testInvert testPartitioning
 	
 library:
 	make -f $(ST_INSTALL_PATH)/Makefile
 
+testInvert:
+	$(CC) $(CFLAGS) -I$(INCLUDE) testInvert.c $(SUPPORT)/libst_op2.a $(LFLAGS) -o invert
+
 testPartitioning:
-	$(CC) $(CFLAGS) -I$(INCLUDE) testColoringPartitioning.c $(SUPPORT)/libst_op2.a $(LFLAGS)
+	$(CC) $(CFLAGS) -I$(INCLUDE) testColoringPartitioning.c $(SUPPORT)/libst_op2.a $(LFLAGS) -o partition_color
+	
+clean:
+	rm -rf invert partition_color *~

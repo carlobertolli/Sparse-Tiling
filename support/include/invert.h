@@ -6,18 +6,18 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#include <metis.h>
-
 #if (DEBUG > 0)
 #include <stdio.h>
 #endif
 
 /*
+ * Given a mapping from a set X to a set Y, invert it by creating the inverse mapping from Y to X 
+ *
  * input:
  * x2y			: mapping from x to y
- * size_x2y		: size of the mapping x2y
- * ny			: size of the destination set y
- * onex_ny		: number of y elements for each x elements (eg x2y == e2v -> onex_ny = 2)
+ * size_x2y	: size of the mapping x2y
+ * ny				: size of the destination set y
+ * onex_ny	: number of y elements for each x elements (eg x2y == e2v -> onex_ny = 2)
  * x_zero		: == true -> x numbering starts from 0 
  *
  * output:
@@ -27,28 +27,17 @@
  */
 void invertMapping (int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset);
 
-
-/* input:
- * nvertices	: #vertices
- * nparts		: number of partitions requested to metis
- * xadj			: vertices offsets in adjncy - standard CSR format
- * adjncy		: v2v mapping - standard CSR format
+/* Given a set X, #X = N, creates the mapping f(X) = {i -> j : X[j] = i, i \in [1, N]}
  * 
- * output:
- * *part		: part[i] == partition of vertex 1, computed by metis
- */
-int metisPartition (int nvertices, int nparts, idx_t* xadj, idx_t* adjncy, int** part);
-
-/*
  * input:
- * nvertices		: #vertices
- * v2e				: map v2e
- * partitionSize	: size requested for vertex partitions 
- * 
+ * x		: input set
+ * size	: size of x
+ *
  * output:
- * partitions		: vertex -> partitionID
- * colors			: partitionID -> color 
+ * fx		:	output set
  */
-void partitionAndColor (int nvertices, int partitionSize, int* v2e, int* offset, int** _partitions, int** _colors);
+void createMapping (int* x, int size, int* fx);
+
+
 
 #endif
