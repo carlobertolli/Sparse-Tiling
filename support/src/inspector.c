@@ -10,6 +10,7 @@
 
 #define MAX(A, B)	(A > B) ? A : B
 
+
 /* input:
  * vertices		: #vertices
  * nparts			: number of partitions requested to metis
@@ -43,6 +44,45 @@ int metisPartition (int vertices, int _nparts, idx_t* xadj, idx_t* adjncy, int**
 	return result;
 }
 
+
+void printInspector (inspector_t* insp)
+{
+	if ( !insp )
+	{
+		printf("insp is NULL\n");
+		return;
+	}
+
+	printf("size of the base set: \t%d\n", insp->size);
+	printf("number of tiles: \t%d\n", insp->ntiles);
+	
+	printf("previous coloring set:\n\t");
+	if ( insp->col_prev )
+		for (int i = 0; i < insp->size; i++ )
+			printf ("%d ", insp->col_prev[i]);
+	else 
+		printf("no previous coloring set");
+	printf("\n\n");
+	
+	printf("current coloring set:\n\t");
+	if ( insp->col_current )
+		for (int i = 0; i < insp->size; i++ )
+			printf ("%d ", insp->col_current[i]);
+	else 
+		printf("no current coloring set");
+	printf("\n\n");
+
+	printf("Initial distribution of the base set among tiles:\n");
+	for (int b = 0; b < insp->ntiles; b++ )
+	{
+		int offset = ( b ) ? insp->partSize[b - 1] : 0;
+		for (int j = 0; j < insp->partSize[b]; j++ )
+			printf("\t%d ", insp->p2v[b*offset + j]);
+		printf("\n");
+	}
+	
+	printf("Inspector printed!\n");
+}
 
 inspector_t* initInspector (int baseset, int partSize)
 {
@@ -83,13 +123,6 @@ void scanParLoop (inspector_t* insp, int fstSetSize, int* fstMap, int fstMapSize
 
 void partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 {
-	// allocate output arrays
-	//int* partitions = (int*) calloc (vertices, sizeof (int));
-	int* colors = (int*) malloc (insp->ntiles * sizeof (int));
-	
-	// obtain number of partitions needed TODO: fix size
-	//int numberOfPartitions = vertices / partitionSize + vertices % partitionSize;
-	
 	// invert the mapping, v2e is needed to compute coloring
 	int* v2e 	= (int*) malloc ( mapsize * sizeof(int) );
 	int* v2e_offset	= (int*) calloc ( vertices + 1, sizeof(int) ); 
@@ -97,21 +130,23 @@ void partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 	
 	//invert mapping, i.e. creates v2e mapping, and call metis to compute the partitioning
 	invertMapping ( e2v, mapsize, vertices, 2, 1, v2e, adjncy, v2e_offset );
-	
+
 	int* v2p;
-	metisPartition (vertices, 2, (idx_t*) v2e_offset, (idx_t*) adjncy, &v2p); //TODO: 2 is just a fixed value for the example..
+	metisPartition (vertices, insp->ntiles, (idx_t*) v2e_offset, (idx_t*) adjncy, &v2p); //TODO: 2 is just a fixed value for the example..
 	
 	// compute the mapping p2v as it is needed to determine a coloring scheme
-	int* p2v;
-	int* p2v_offset;
+	int* p2v = (int*) malloc ( vertices * sizeof(int) );
+	int* p2v_offset = (int*) calloc ( insp->ntiles + 1, sizeof(int) );
+	
 	invertMapping (v2p, vertices, vertices, 1, 1, p2v, NULL, p2v_offset);
 	
 	// add the p2v mapping and the partition sizes to the inspector
 	insp->p2v = p2v;
 	for ( int b = 0; b < insp->ntiles; b++ )
 		insp->partSize[b] = p2v_offset[b + 1] - p2v_offset[b];
-	
+		
 	// init colors
+	int* colors = (int*) malloc (insp->ntiles * sizeof (int));
 	for ( int b = 0; b < insp->ntiles; b++ ) 
 		colors[b] = -1;
 	
@@ -119,13 +154,15 @@ void partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 	int ncolor = 0;
 	int ncolors = 0;
 	int prev_offset, next_offset;
-	int to_size = v2e_offset[vertices];
+	int totSize = v2e_offset[vertices];
 	
 	// allocate and zero out 
-	int* work = (int*) malloc ( to_size * sizeof(int) );
+	int* work = (int*) malloc ( totSize * sizeof(int) );
 	
 	prev_offset = 0; 
 	next_offset = 0;
+	
+	printf("v2e_offset[vertices] = %d, p2v_offset[vertices] = %d\n", p2v_offset[0], p2v_offset[8] );
 	
 	// coloring algorithm
 	while ( repeat )
@@ -133,7 +170,7 @@ void partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 		repeat = 0;
 		
 		// zero out color arrays
-		for ( int e = 0; e < to_size; e++ )
+		for ( int e = 0; e < totSize; e++ )
 			work[e] = 0;
 		
 		// starts trying to color all blocks
@@ -160,7 +197,7 @@ void partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 				
 #if (DEBUG > 0) 
 				printf ("WORK LOADED: [ ");
-				for ( int i = 0; i < to_size; i++ )
+				for ( int i = 0; i < totSize; i++ )
 					printf ("%d ", work[i] );
 				printf ("]\n");
 #endif
@@ -190,8 +227,26 @@ void partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 	}
 	
 	free (work);
-	//TODO: Free a lot of stuff..
 	
-	//*_partitions = partitions;
-	insp->col_current = colors;
+	free (p2v_offset);
+	free (v2e_offset);
+	free (adjncy);
+	free (v2e);
+
+	// assign color to each vertex of the base set
+	insp->col_current = (int*) malloc (insp->size * sizeof(int));
+	int* offset = (int*) malloc ((insp->ntiles + 1) * sizeof(int));
+	offset[0] = 0;
+	
+	for (int i = 1; i <= insp->ntiles; i++ ) 
+		offset[i] = insp->partSize[i - 1] + offset[i - 1];
+	
+	for (int b = 0; b < insp->ntiles; b++ )
+	{
+		for (int j = offset[b]; j < offset[b + 1]; j++ ) 
+			insp->col_current[j] = colors[b];
+	}
+	printInspector (insp);
+	//free (offset);
+
 }

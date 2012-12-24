@@ -20,8 +20,9 @@ int main ()
 		
 	partitionAndColor ( insp, vertices, e2v, mapEntries );
 
-	
-	printf ("TILE : VERTEX : COLOR: \n");
+	printInspector ( insp );
+	/*
+	printf ("TILES %d, VERTEX %d, COLORS: \n", insp->ntiles, vertices);
 	for ( int i = 0; i < insp->ntiles; i++ )
 	{
 		partSize = insp->partSize[i];
@@ -30,7 +31,7 @@ int main ()
 			printf ("\tVertex: %d, Color: %d\n", insp->p2v[i*partSize + j], insp->col_current[i*partSize + j]);
 	}
 	printf ("\n");
-		
+	*/
 	freeInspector (insp);
 	
 	return 0;
