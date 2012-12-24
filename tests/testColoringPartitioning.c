@@ -16,11 +16,11 @@ int main ()
 	int e2v[] = { 0,1 , 1,2 , 2,3 , 3,4 , 0,5 , 5,10, 1,6 , 6,11 , 2,7 , 7,12 , 3,8 , 8,13 , 4,9 , 9,14 , 5,6 , 6,7 , 7,8 , 8,9 , 10,11 , 11,12 , 12,13, 13,14 };
 	
 	//compute coloring
-	inspector_t* insp = initInspector (vertices, partSize);
+	inspector_t* insp = initInspector (vertices, partSize, 1);
 		
-	partitionAndColor ( insp, vertices, e2v, mapEntries );
+	partitionAndColor (insp, vertices, e2v, mapEntries);
 
-	printInspector ( insp );
+	printInspector (insp);
 	/*
 	printf ("TILES %d, VERTEX %d, COLORS: \n", insp->ntiles, vertices);
 	for ( int i = 0; i < insp->ntiles; i++ )

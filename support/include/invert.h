@@ -27,7 +27,7 @@
  */
 void invertMapping (int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset);
 
-/* Given a set X, #X = N, creates the mapping f(X) = {i -> j : X[j] = i, i \in [1, N]}
+/* Given a set X, #X = N, creates the "base mapping" f(X) = {i -> j : X[j] = i, i \in [1, N]} (that is, a mapping from x to itself)
  * 
  * input:
  * x		: input set
@@ -36,8 +36,18 @@ void invertMapping (int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int
  * output:
  * fx		:	output set
  */
-void createMapping (int* x, int size, int* fx);
+void baseMapping (int* x, int size, int* fx);
 
-
+/* Given a mapping x2y, 
+ *
+ * input:
+ * x2y	: mapping from x to y
+ * size	: size of the mapping x2y
+ * fy		: baseMapping for the y set
+ *
+ * output:
+ * x2fy : new mapping x2y 
+ */
+void newMapping (int* x2y, int size, int* fy, int* x2fy);
 
 #endif

@@ -37,7 +37,7 @@ int main ()
 	
 	if ( result != METIS_OK ) 
 	{
-		printf("Something went wrong when partitioning\n");
+		printf("Something went wrong during partitioning\n");
 		return -1;
 	}
 	

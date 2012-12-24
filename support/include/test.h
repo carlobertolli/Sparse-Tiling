@@ -12,3 +12,5 @@
 int metisPartition ( int nvertices, int _nparts, idx_t* xadj, idx_t* adjncy, int** part  );
 
 void printInspector (inspector_t* insp);
+
+void printTile (tile_t* tile);

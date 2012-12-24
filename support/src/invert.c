@@ -2,6 +2,7 @@
 
 void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset  )
 {
+	
 	offset[0] = 0;
 	x_zero = ( x_zero ) ? 1 : 0; //takes into account x numbering starting from either 0 or 1
 	
@@ -9,7 +10,7 @@ void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, in
 	for ( int i = 0; i < size_x2y; i++ )
 		offset[x2y[i] + x_zero] ++;
 	
-	for ( int i = 1; i < ny + 1; i++ )
+	for ( int i = 1; i < ny; i++ )
 		offset[i + x_zero] += offset[i - 1  + x_zero];
 	
 	
@@ -19,7 +20,7 @@ void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, in
 #endif
 	 
 	
-	int* inserted = (int*) calloc ( ny, sizeof(int) ); //relative offset when inserting into y2x and adjncy
+	int* inserted = (int*) calloc ( ny + 1, sizeof(int) ); //relative offset when inserting into y2x and adjncy
 	
 	if ( y2adj ) // compute both y2x and adjncy
 	{
@@ -51,7 +52,8 @@ void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, in
 	free (inserted);
 }
 
-void createMapping (int* x, int size, int* fx)
+
+void baseMapping (int* x, int size, int* fx)
 {
 	
 	for ( int i = 0; i < size; i++ )
@@ -59,4 +61,8 @@ void createMapping (int* x, int size, int* fx)
 }
 
 
-
+void newMapping (int* x2y, int size, int* fy, int* x2fy)
+{
+	for (int i = 0; i < size; i++)
+		x2fy[i] = fy[x2y[i]];
+}
