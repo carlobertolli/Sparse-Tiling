@@ -87,7 +87,7 @@ void printInspector (inspector_t* insp)
 	for (int i = 0; i < insp->loopCounter; i++)
 	{
 		printf("\tLoop %d (setSize: %d, mapSize: %d)\n", i, insp->loops[i]->setSize, insp->loops[i]->mapSize);
-		printf("\tIndirect map (to the *renumbered* base set: \n\t\t");
+		printf("\tIndirect map (to the *renumbered* base set): \n\t\t");
 		for (int j = 0; j < insp->loops[i]->mapSize; j++ )
 			printf("%d ", insp->loops[i]->indMap[j]);
 		printf("\n");
@@ -144,16 +144,43 @@ void freeInspector (inspector_t* insp)
 	free (insp);
 }
 
-void scanParLoops (inspector_t* insp, int fstSetSize, int* fstMap, int fstMapEl, int fstMapSize, int sndSetSize, int* sndMap, int sndMapSize, int sndMapEl)
+int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize)
 {
-	//int* baseSetColors = insp->col_current;
+	if (baseSetIndex >= seqSize - 1)
+		return INSPOP_WRONGPAR;
 	
-	//color the first loop
-	/*for (int i = 0; i < fstMapSize; i += fstMapEl)
+	if (insp->loopCounter < 2 || insp->nloops != insp->loopCounter)
+		return INSPOP_NOTENAUGHLOOP;
+	
+	//aliases
+	int* baseSetColors = insp->col_current;
+	loop_t* l1 = insp->loops[sequence[baseSetIndex]];
+	loop_t* l2 = insp->loops[sequence[baseSetIndex + 1]];
+	
+	//start coloring 
+	//1) first two loops colored in sequence
+	for (int e = 0; e < l1->setSize; e++)
+	{
+		const int step = l1->mapSize / l1->setSize; 
+		for (int i = 0; i < l1->mapSize; i += step) 
+		{
+				
+		}
+	}
+	
+	//2) proceed coloring - FORWARD
+	for (int s = baseSetIndex + 1; s < seqSize; s++)
 	{
 		
-	}*/
+	}	
 	
+	//3) proceed coloring - BACKWARD
+	for (int s = baseSetIndex - 1 ; s > 0; s++)
+	{
+		
+	}	
+	
+	return INSPOP_OK;
 }
 
 int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirectionMap, int mapSize)
@@ -257,7 +284,6 @@ int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 				for ( int e = prev_offset; e < next_offset; e++ ) 
 				{
 					int v = p2v[e];
-					
 					for ( int j = 0; j < (v2e_offset[v + 1] - v2e_offset[v]); j++ )  
 						mask |= work[v2e[v2e_offset[v] + j]-1]; // set bits of mask
 				}

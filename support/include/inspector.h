@@ -10,8 +10,10 @@
 
 #include "tile.h"
 
-#define INSPOP_OK				1
-#define	INSPOP_MAXLOOP	0
+#define INSPOP_OK							1
+#define	INSPOP_MAXLOOP				0
+#define INSPOP_WRONGPAR				-1
+#define INSPOP_NOTENAUGHLOOP	-2
 
 /* This struct contains information about a specific par loop
  *
@@ -19,7 +21,7 @@
 typedef struct {
 	char* loopname;		//name/identified of the parloop
 	int setSize;			//size of the iteration set
-	int* indMap;			//indirect map to the base set
+	int* indMap;			//indirect map to the renumbered base set
 	int mapSize;			//size of indMap
 	
 } loop_t;
@@ -66,10 +68,17 @@ inspector_t* initInspector (int baseset, int partSize, int loops);
 void freeInspector (inspector_t* insp);
 
 /*
- * Inspect two subsequent parallel loops and builds the tiles of the inspector
- * TODO: need to add a back and forth variable? 
+ * Inspect a sequence of parallel loops and compute the coloring.
+ * Parallel loop have been previously added to the inspector by means of addParLoop
+ * 
+ * input:
+ * insp						: inspector
+ * baseSetIndex		: starting point of the coloring [0, seqSize - 1)
+ * sequence				: sequence of parloops to be tiled
+ * seqSize				: size of sequence
+ * 
  */
-void scanParLoops (inspector_t* insp, int fstSetSize, int* fstMap, int fstMapEl, int fstMapSize, int sndSetSize, int* sndMap, int sndMapSize, int sndMapEl);
+void runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize);
 
 /*
  * Add a parallel loop to the inspector 
@@ -79,7 +88,7 @@ void scanParLoops (inspector_t* insp, int fstSetSize, int* fstMap, int fstMapEl,
  * - they use the same indirection mapping to access the base set
  *
  * IMPORTANT: the sequence of par loops in the OP2 code MUST match the sequence of addParLoop invokations (i.e. same ordering)  
- * IMPORTANT: all calls to addParLoop must be made before any call to scanParLoops
+ * IMPORTANT: all calls to addParLoop must be made before the call to runInspector
  *
  * input:
  * loopname				: unique identifier for the parallel loop
