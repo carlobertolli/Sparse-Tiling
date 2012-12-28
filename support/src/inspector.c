@@ -55,23 +55,16 @@ void printInspector (inspector_t* insp)
 		return;
 	}
 
-	printf("size of the base set: \t%d\n", insp->size);
-	printf("number of tiles: \t%d\n", insp->ntiles);
+	printf("- INSPECTOR -\n\n");
+	printf("Size of the base set: \t%d\n", insp->size);
+	printf("Number of tiles: \t%d\n", insp->ntiles);
 	
-	printf("previous coloring set:\n\t");
-	if ( insp->col_prev )
+	printf("\nInitial coloring set:\n\t");
+	if ( insp->colOrig )
 		for (int i = 0; i < insp->size; i++ )
-			printf ("%d ", insp->col_prev[i]);
+			printf ("%d ", insp->colOrig[i]);
 	else 
-		printf("no previous coloring set");
-	printf("\n\n");
-	
-	printf("current coloring set:\n\t");
-	if ( insp->col_current )
-		for (int i = 0; i < insp->size; i++ )
-			printf ("%d ", insp->col_current[i]);
-	else 
-		printf("no current coloring set");
+		printf("No current coloring set");
 	printf("\n\n");
 
 	printf("Initial distribution of the base set among tiles:\n");
@@ -83,7 +76,7 @@ void printInspector (inspector_t* insp)
 		printf("\n");
 	}
 	
-	printf("LOOPS (%d crossed / %d allowed):\n", insp->loopCounter, insp->nloops);
+	printf("\nLOOPS (%d crossed / %d allowed):\n", insp->loopCounter, insp->nloops);
 	for (int i = 0; i < insp->loopCounter; i++)
 	{
 		printf("\tLoop %d (setSize: %d, mapSize: %d)\n", i, insp->loops[i]->setSize, insp->loops[i]->mapSize);
@@ -93,15 +86,15 @@ void printInspector (inspector_t* insp)
 		printf("\n");
 	}
 	
-	printf("Inspector printed!\n");
+	printf("\nInspector printed!\n");
 }
 
 inspector_t* initInspector (int baseset, int partSize, int nloops)
 {
 	inspector_t* insp = (inspector_t*) malloc (sizeof(inspector_t));
 	
-	insp->col_prev = NULL;
-	insp->col_current = NULL;
+	insp->v2pOrig = NULL;
+	insp->colOrig = NULL;
 	
 	insp->v2v = NULL;
 	
@@ -130,44 +123,103 @@ void freeInspector (inspector_t* insp)
 	
 	for (int i = 0; i < insp->loopCounter; i++)
 	{
-		free (insp->loops[i]->indMap);
+		//TODO: free (insp->loops[i]->indMap);
 		free (insp->loops[i]->loopname);
+		free (insp->loops[i]->workColor);
 		free (insp->loops[i]);
 	}
 
 	free (insp->loops);
-	free (insp->col_prev);
-	free (insp->col_current);
+	free (insp->v2pOrig);
+	free (insp->colOrig);
 	free (insp->v2v);
 	free (insp->partSize);
 	free (insp->p2v);
 	free (insp);
 }
 
+
 int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize)
 {
-	if (baseSetIndex >= seqSize - 1)
+	
+	if (baseSetIndex >= seqSize)
 		return INSPOP_WRONGPAR;
 	
-	if (insp->loopCounter < 2 || insp->nloops != insp->loopCounter)
-		return INSPOP_NOTENAUGHLOOP;
+//	if (insp->loopCounter < 2 || insp->nloops != insp->loopCounter)
+	//	return INSPOP_NOTENAUGHLOOP;
 	
 	//aliases
-	int* baseSetColors = insp->col_current;
+	int* baseSetColors = insp->colOrig;
+	int* v2p = insp->v2pOrig;
 	loop_t* l1 = insp->loops[sequence[baseSetIndex]];
 	loop_t* l2 = insp->loops[sequence[baseSetIndex + 1]];
 	
-	//start coloring 
+    /*
+     * A coloring function would suit better to the context than hard-coding the algorithm as follows.
+     * However, for the sake of clarity, at least in this stage of developing we prefer to highlight the 
+     * minimum and maximum phase of the algorithm as well as the variable names, the MAX/MIN functions, ecc
+     */
+    
+	// Start coloring 
 	//1) first two loops colored in sequence
+	int step = l1->mapSize / l1->setSize; 
 	for (int e = 0; e < l1->setSize; e++)
 	{
-		const int step = l1->mapSize / l1->setSize; 
-		for (int i = 0; i < l1->mapSize; i += step) 
+		//find the minium color (and relative index) among the base set elements adjacent to the set element e 
+		int newMinColor, minColor = baseSetColors[l1->indMap[e*step]]; 
+		
+		int minColorIndex = e * step;
+		for (int i = 1; i < step; i++)
 		{
-				
+			newMinColor = MIN(minColor, baseSetColors[l1->indMap[e*step + i]]);
+			
+#if (DEBUG > 0)
+            printf("e = %d, minColor = %d, l1->indMap[%d] = %d, l1->indMap[%d] = %d, baseSetColors[l1->indMap[%d]] = %d\n", e, minColor, e*step, l1->indMap[e*step], e*step + i, l1->indMap[e*step + i], e*step + i, baseSetColors[l1->indMap[e*step + i]]);
+#endif
+            
+            if ( newMinColor != minColor )
+			{
+				minColor = newMinColor;
+				minColorIndex = e*step + i;
+			}
 		}
+		
+		//add the color to the loop iteration set 
+		l1->workColor[e] = minColor;
+		
+		//add the element e to the corresponding tile (which corresponds to the partition of the base set element minColorIndex)
+		int partition = v2p[l1->indMap[minColorIndex]];
+		addElement (insp->tiles[partition], baseSetIndex, e);
 	}
-	
+    
+    step = l2->mapSize / l2->setSize;
+	for (int e = 0; e < l2->setSize; e++)
+	{
+        //find the maximum color (and relative index) among the base set elements adjacent to the set element e
+		int newMaxColor, maxColor = baseSetColors[l2->indMap[e*step]];
+		
+		int maxColorIndex = e * step;
+		for (int i = 1; i < step; i++)
+		{
+			newMaxColor = MAX(maxColor, baseSetColors[l2->indMap[e*step + i]]);
+			         
+            if ( newMaxColor != maxColor )
+			{
+				maxColor = newMaxColor;
+				maxColorIndex = e*step + i;
+			}
+		}
+		
+		//add the color to the loop iteration set
+		l2->workColor[e] = maxColor;
+		
+		//add the element e to the corresponding tile (which corresponds to the partition of the base set element maxColorIndex)
+		int partition = v2p[l2->indMap[maxColorIndex]];
+		addElement (insp->tiles[partition], baseSetIndex + 1, e);
+	}
+
+    
+	/*
 	//2) proceed coloring - FORWARD
 	for (int s = baseSetIndex + 1; s < seqSize; s++)
 	{
@@ -179,40 +231,41 @@ int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSiz
 	{
 		
 	}	
-	
+	*/
 	return INSPOP_OK;
 }
 
 int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirectionMap, int mapSize)
 {
-	if ( insp->loopCounter >= insp->nloops )
+ 	if ( insp->loopCounter >= insp->nloops )
 		return INSPOP_MAXLOOP;
 	
-	//create a base set mapping from the "original OP2 mapping x2y" to a new one which reflects the renumbering of the base set in p2v
+	//create a base set mapping from the "original OP2 mapping x2y" to a new one which reflects the renumbering of the base set given by p2v
 	if ( ! insp->v2v )
 	{
-		int* mappingFunction = (int*) malloc (setSize * sizeof(int));
+ 		int* mappingFunction = (int*) malloc (setSize * sizeof(int));
 		baseMapping (insp->p2v, insp->size, mappingFunction);
 		insp->v2v = mappingFunction;
 	}
-	
-	//create a new mapping for the parloop, from the original OP2 indirectionMap to the new one which reflects the new position of vertices in p2v 
+
+	//create a new mapping for the parloop, from the original OP2 indirectionMap to the new one which reflects the new position of vertices in p2v
 	int* renumberedMap = (int*) malloc (mapSize * sizeof(int));
 	newMapping (indirectionMap, mapSize, insp->v2v, renumberedMap );
 	
-	// store parloop parameters into insp
+    // store parloop parameters into insp
 	insp->loops[insp->loopCounter] = (loop_t*) malloc (sizeof(loop_t));
 	
-	insp->loops[insp->loopCounter]->loopname = strdup (loopname);
-	insp->loops[insp->loopCounter]->setSize	 = setSize;
-	insp->loops[insp->loopCounter]->indMap	 = renumberedMap;
-	insp->loops[insp->loopCounter]->mapSize	 = mapSize;
+	insp->loops[insp->loopCounter]->loopname  = strdup (loopname);
+	insp->loops[insp->loopCounter]->setSize	  = setSize;
+	insp->loops[insp->loopCounter]->indMap	  = indirectionMap; // TODO: renumberedMap;
+	insp->loops[insp->loopCounter]->mapSize	  = mapSize;
+	insp->loops[insp->loopCounter]->workColor = (int*) malloc (setSize * sizeof(int)); 
 	
-	// add the parloop to each tile of the inspector
+    // add the parloop to each tile of the inspector
 	for (int i = 0; i < insp->ntiles; i++)
 		addLoop (insp->tiles[i], setSize, loopname); // IMPORTANT: an upper bound to the tile iteration set size is specified here (the whole set)
 	
-	insp->loopCounter++;
+    insp->loopCounter++;
 	return INSPOP_OK;
 }
 
@@ -319,21 +372,31 @@ int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 		ncolor += 32; // increment base level
 	}
 	
-	// assign color to each vertex of the base set
-	insp->col_current = (int*) malloc (insp->size * sizeof(int));
-	int* offset = (int*) malloc ((insp->ntiles + 1) * sizeof(int));
+	// assign initial coloring and partitioning to each vertex of the base set
+	insp->v2pOrig = v2p;
+	
+    /*
+    insp->colOrig = (int*) malloc (insp->size * sizeof(int));
+    int* offset = (int*) malloc ((insp->ntiles + 1) * sizeof(int));
 	offset[0] = 0;
-	
-	for (int i = 1; i <= insp->ntiles; i++ ) 
+    
+	for (int i = 1; i <= insp->ntiles; i++ )
 		offset[i] = insp->partSize[i - 1] + offset[i - 1];
-	
+    
 	for (int b = 0; b < insp->ntiles; b++ )
 	{
-		for (int j = offset[b]; j < offset[b + 1]; j++ ) 
-			insp->col_current[j] = colors[b];
+		for (int j = offset[b]; j < offset[b + 1]; j++ )
+			insp->colOrig[j] = colors[b];
 	}
-	
+    
 	free (offset);
+    */
+    
+     insp->colOrig = (int*) malloc (insp->size * sizeof(int));
+     for (int i = 0; i < insp->size; i++ )
+         insp->colOrig[i] = colors[v2p[i]];
+     
+    
 	free (work);
 	free (p2v_offset);
 	free (v2e_offset);

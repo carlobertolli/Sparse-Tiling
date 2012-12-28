@@ -23,9 +23,9 @@ tile_t* createTile ()
 
 int addElement (tile_t* tile, int loop, int el)
 {
-	if (tile->curSize + 1 > tile->size)
-		return TILEOP_TOOMANYELEMS;
-	
+    if (tile->curSize[loop] + 1 > tile->size[loop])
+        return TILEOP_TOOMANYELEMS;
+    
 	tile->element[loop][tile->curSize[loop]] = el; //add the element to the proper (loop, offset) in the tile 
 	tile->curSize[loop]++;
 	
@@ -34,9 +34,9 @@ int addElement (tile_t* tile, int loop, int el)
 
 int addLoop (tile_t* tile, int size, char* setName)
 {
-	if (tile->nloops + 1 == MAXLOOPS)
+    if (tile->nloops + 1 == MAXLOOPS)
 		return TILEOP_TOOMANYLOOPS;
-	
+    
 	tile->loopname[tile->nloops] = setName;
 	tile->size[tile->nloops] = size;
 	tile->element[tile->nloops] = (int*) malloc (size * sizeof(int)); 
@@ -69,8 +69,8 @@ void printTile (tile_t* tile)
 		printf("Loop %d - %s - size %d - space allocated %d (elements):\n\t", i, tile->loopname[i], tile->curSize[i], tile->size[i]);
 		for (int j = 0; j < tile->curSize[i]; j++)	
 			printf("%d ", tile->element[i][j]);
-		printf("\n\n");
+		printf("\n");
 	}
 	
-	printf("Tile printed!\n");
+	printf("Tile printed!\n\n");
 }

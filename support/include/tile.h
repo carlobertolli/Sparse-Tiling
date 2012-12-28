@@ -9,7 +9,7 @@
 
 #define MAXLOOPS			10 // actually, there is no specific reason to specify but simplifying code 
 
-#define TILEOP_OK							1
+#define TILEOP_OK				1
 #define TILEOP_TOOMANYLOOPS		0
 #define TILEOP_TOOMANYELEMS		-1
 

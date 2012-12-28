@@ -24,6 +24,8 @@ typedef struct {
 	int* indMap;			//indirect map to the renumbered base set
 	int mapSize;			//size of indMap
 	
+	int* workColor;		//working array to support coloring of a parloop. Size is setSize.
+	
 } loop_t;
 
 /* The Inspector data structure.
@@ -31,8 +33,8 @@ typedef struct {
  */
 typedef struct {
 	int size;					//size of the base set
-	int* col_prev;		//color of p2v for the two previous parloops. 
-	int* col_current; //current color for each element of p2v
+	int* v2pOrig;			//v2p mapping given by metis 
+	int* colOrig;			//current color for each element of v2p
 	
 	int ntiles;				//number of tiles for this inspector
 	tile_t** tiles;		//tiles of the inspector
@@ -78,7 +80,7 @@ void freeInspector (inspector_t* insp);
  * seqSize				: size of sequence
  * 
  */
-void runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize);
+int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize);
 
 /*
  * Add a parallel loop to the inspector 
