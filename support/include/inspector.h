@@ -24,8 +24,6 @@ typedef struct {
 	int* indMap;			//indirect map to the renumbered base set
 	int mapSize;			//size of indMap
 	
-	int* workColor;		//working array to support coloring of a parloop. Size is setSize.
-	
 } loop_t;
 
 /* The Inspector data structure.

@@ -125,7 +125,7 @@ void freeInspector (inspector_t* insp)
 	{
 		//TODO: free (insp->loops[i]->indMap);
 		free (insp->loops[i]->loopname);
-		free (insp->loops[i]->workColor);
+		//free (insp->loops[i]->workColor);
 		free (insp->loops[i]);
 	}
 
@@ -138,6 +138,69 @@ void freeInspector (inspector_t* insp)
 	free (insp);
 }
 
+void doMaxColor (tile_t** tiles, int* v2p, int* baseSetColors, int setSize, int* indMap, int mapSize, int* work, int* partition, int loopID)
+{
+    int step = mapSize / setSize;
+	for (int e = 0; e < setSize; e++)
+	{
+        //find the maximum color (and relative index) among the base set elements adjacent to the set element e
+		int newMaxColor, maxColor = baseSetColors[indMap[e * step]];
+		int maxColorIndex = e * step;
+
+        for (int i = 1; i < step; i++)
+		{
+			newMaxColor = MAX (maxColor, baseSetColors[indMap[e * step + i]]);
+        
+            if ( newMaxColor != maxColor )
+			{
+				maxColor = newMaxColor;
+				maxColorIndex = e * step + i;
+			}
+		}
+		
+		//add the color to the loop iteration set
+		work[e] = maxColor;
+        
+		//add the element e to the corresponding tile (which corresponds to the partition of the base set element maxColorIndex)
+		partition[e] = v2p[indMap[maxColorIndex]];
+		addElement (tiles[partition[e]], loopID, e);
+	}
+}
+
+void doMinColor (tile_t** tiles, int* v2p, int* baseSetColors, int setSize, int* indMap, int mapSize, int* work, int* partition, int loopID)
+{
+    int step = mapSize / setSize;
+	for (int e = 0; e < setSize; e++)
+	{
+		//find the minium color (and relative index) among the base set elements adjacent to the set element e
+		int newMinColor, minColor = baseSetColors[indMap[e * step]];
+		int minColorIndex = e * step;
+		
+        for (int i = 1; i < step; i++)
+		{
+			newMinColor = MIN (minColor, baseSetColors[indMap[e * step + i]]);
+			
+#if (DEBUG > 0)
+            printf("e = %d, minColor = %d, l1->indMap[%d] = %d, l1->indMap[%d] = %d, baseSetColors[l1->indMap[%d]] = %d\n",
+                   e, minColor, e * step, indMap[e * step], e * step + i, indMap[e * step + i], e * step + i, baseSetColors[indMap[e * step + i]]);
+#endif
+            
+            if ( newMinColor != minColor )
+			{
+				minColor = newMinColor;
+				minColorIndex = e * step + i;
+			}
+		}
+		
+		//add the color to the loop iteration set
+		work[e] = minColor;
+        
+		//add the element e to the corresponding tile (which corresponds to the partition of the base set element minColorIndex)
+		partition[e] = v2p[indMap[minColorIndex]];
+		addElement (tiles[partition[e]], loopID, e);
+	}
+}
+
 
 int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize)
 {
@@ -145,93 +208,133 @@ int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSiz
 	if (baseSetIndex >= seqSize)
 		return INSPOP_WRONGPAR;
 	
-//	if (insp->loopCounter < 2 || insp->nloops != insp->loopCounter)
-	//	return INSPOP_NOTENAUGHLOOP;
+	if (insp->loopCounter < 2 || insp->nloops != insp->loopCounter)
+		return INSPOP_NOTENAUGHLOOP;
 	
-	//aliases
-	int* baseSetColors = insp->colOrig;
-	int* v2p = insp->v2pOrig;
-	loop_t* l1 = insp->loops[sequence[baseSetIndex]];
-	loop_t* l2 = insp->loops[sequence[baseSetIndex + 1]];
-	
-    /*
-     * A coloring function would suit better to the context than hard-coding the algorithm as follows.
-     * However, for the sake of clarity, at least in this stage of developing we prefer to highlight the 
-     * minimum and maximum phase of the algorithm as well as the variable names, the MAX/MIN functions, ecc
-     */
+    //allocate working array
+    int* workVerticesPartition = (int*) malloc (insp->size * sizeof(int));
+    int* workVertices  = (int*) malloc (insp->size * sizeof(int)); //for vertices second color
     
-	// Start coloring 
-	//1) first two loops colored in sequence
-	int step = l1->mapSize / l1->setSize; 
-	for (int e = 0; e < l1->setSize; e++)
-	{
-		//find the minium color (and relative index) among the base set elements adjacent to the set element e 
-		int newMinColor, minColor = baseSetColors[l1->indMap[e*step]]; 
-		
-		int minColorIndex = e * step;
-		for (int i = 1; i < step; i++)
-		{
-			newMinColor = MIN(minColor, baseSetColors[l1->indMap[e*step + i]]);
-			
-#if (DEBUG > 0)
-            printf("e = %d, minColor = %d, l1->indMap[%d] = %d, l1->indMap[%d] = %d, baseSetColors[l1->indMap[%d]] = %d\n", e, minColor, e*step, l1->indMap[e*step], e*step + i, l1->indMap[e*step + i], e*step + i, baseSetColors[l1->indMap[e*step + i]]);
-#endif
-            
-            if ( newMinColor != minColor )
-			{
-				minColor = newMinColor;
-				minColorIndex = e*step + i;
-			}
-		}
-		
-		//add the color to the loop iteration set 
-		l1->workColor[e] = minColor;
-		
-		//add the element e to the corresponding tile (which corresponds to the partition of the base set element minColorIndex)
-		int partition = v2p[l1->indMap[minColorIndex]];
-		addElement (insp->tiles[partition], baseSetIndex, e);
-	}
+    memcpy (workVertices, insp->colOrig, insp->size * sizeof(int));
+    memcpy (workVerticesPartition, insp->v2pOrig, insp->size * sizeof(int));
     
-    step = l2->mapSize / l2->setSize;
-	for (int e = 0; e < l2->setSize; e++)
-	{
-        //find the maximum color (and relative index) among the base set elements adjacent to the set element e
-		int newMaxColor, maxColor = baseSetColors[l2->indMap[e*step]];
-		
-		int maxColorIndex = e * step;
-		for (int i = 1; i < step; i++)
-		{
-			newMaxColor = MAX(maxColor, baseSetColors[l2->indMap[e*step + i]]);
-			         
-            if ( newMaxColor != maxColor )
-			{
-				maxColor = newMaxColor;
-				maxColorIndex = e*step + i;
-			}
-		}
-		
-		//add the color to the loop iteration set
-		l2->workColor[e] = maxColor;
-		
-		//add the element e to the corresponding tile (which corresponds to the partition of the base set element maxColorIndex)
-		int partition = v2p[l2->indMap[maxColorIndex]];
-		addElement (insp->tiles[partition], baseSetIndex + 1, e);
-	}
+    int maxLoopSize = insp->loops[0]->setSize;
+    for (int i = 0; i < insp->nloops; i++)
+        maxLoopSize = MAX (maxLoopSize, insp->loops[i]->setSize);
+    
+    //two working arrays for loop second color and partition, both sized to the largest iteration set that has to be worked out
+    int* workLoopColor = (int*) malloc (maxLoopSize * sizeof(int));
+    int* workLoopPartition = (int*) malloc (maxLoopSize * sizeof(int)); //for entities second partition
 
     
-	/*
-	//2) proceed coloring - FORWARD
+	// COLORING
+    
+	// A) proceed coloring - FORWARD
 	for (int s = baseSetIndex + 1; s < seqSize; s++)
 	{
-		
-	}	
-	
+        loop_t* startLoop = insp->loops[sequence[s]];
+ 
+        // 1) color the loop
+        doMaxColor (insp->tiles, workVerticesPartition, workVertices, startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, s);
+        
+        // 2) prepare data for the subsequent loop coloring
+        //set to -1 each entry of the vertex second color array
+        for (int i = 0; i < insp->size; i++)
+            workVertices[i] = -1;
+
+        //compute the vertices second color based on workLoopColor, workPartition and workArray
+        int step = startLoop->mapSize / startLoop->setSize;
+        for (int e = 0; e < startLoop->setSize; e++)
+        {
+            int newColor = - 1;
+            int entityColor = workLoopColor[e]; //the color previously assigned to the entity is initially assumed to be the maximum one
+            
+            //then, we iterate over its adjacent base set elements (vertices?) 
+            for (int i = 0; i < step; i++)
+            {
+                newColor = MAX (entityColor, workVertices[startLoop->indMap[e * step + i]]);
+                
+                if (newColor != workVertices[startLoop->indMap[e * step + i]])
+                {
+                    workVertices[startLoop->indMap[e * step + i]] = newColor;
+                    workVerticesPartition[startLoop->indMap[e * step + i]] = workLoopPartition[e];
+                }
+            }
+        }
+        
+#if (DEBUG > 0)
+        printf ("COLORED ONWARDS\n");
+        printf ("workVertices: \n\t");
+        for (int i = 0; i < insp->size; i++)
+            printf ("%d ", workVertices[i]);
+        printf ("\n");
+        
+        printf ("workVerticesPartition: \n\t");
+        for (int i = 0; i < insp->size; i++)
+            printf ("%d ", workVerticesPartition[i]);
+        printf ("\n\n");
+#endif
+    }
+
+    //reset base set values
+    memcpy (workVertices, insp->colOrig, insp->size * sizeof(int));
+    memcpy (workVerticesPartition, insp->v2pOrig, insp->size * sizeof(int));
+
 	//3) proceed coloring - BACKWARD
-	for (int s = baseSetIndex - 1 ; s > 0; s++)
+	for (int s = baseSetIndex; s >= 0; s--)
 	{
-		
-	}	
-	*/
+        loop_t* startLoop = insp->loops[sequence[s]];
+        
+        // 1) color the loop
+        doMinColor (insp->tiles, workVerticesPartition, workVertices, startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, s);
+        
+        // 2) prepare data for the subsequent loop coloring
+        //set to -1 each entry of the vertex second color array
+        for (int i = 0; i < insp->size; i++)
+            workVertices[i] = -1;
+        
+        //compute the vertices second color based on workLoopColor, workPartition and workArray
+        int step = startLoop->mapSize / startLoop->setSize;
+        for (int e = 0; e < startLoop->setSize; e++)
+        {
+            int newColor = - 1;
+            int entityColor = workLoopColor[e]; //the color previously assigned to the entity is initially assumed to be the maximum one
+                    
+            //then, we iterate over its adjacent base set elements (vertices?)
+            for (int i = 0; i < step; i++)
+            {
+                newColor = MIN (entityColor, workVertices[startLoop->indMap[e * step + i]]);
+                
+                if (newColor != workVertices[startLoop->indMap[e * step + i]])
+                {
+                    workVertices[startLoop->indMap[e * step + i]] = newColor;
+                    workVerticesPartition[startLoop->indMap[e * step + i]] = workLoopPartition[e];
+                }
+            }
+        }
+        
+#if (DEBUG > 0)
+        printf ("COLORED BACKWARD\n");
+        printf ("workVertices: \n\t");
+        for (int i = 0; i < insp->size; i++)
+            printf ("%d ", workVertices[i]);
+        printf ("\n");
+        
+        printf ("workVerticesPartition: \n\t");
+        for (int i = 0; i < insp->size; i++)
+            printf ("%d ", workVerticesPartition[i]);
+        printf ("\n\n");
+#endif
+        
+	}
+	
+    
+    // free work array
+    free (workVertices);
+    free (workVerticesPartition);
+    free (workLoopPartition);
+    free (workLoopColor);
+     
 	return INSPOP_OK;
 }
 
@@ -259,7 +362,7 @@ int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirection
 	insp->loops[insp->loopCounter]->setSize	  = setSize;
 	insp->loops[insp->loopCounter]->indMap	  = indirectionMap; // TODO: renumberedMap;
 	insp->loops[insp->loopCounter]->mapSize	  = mapSize;
-	insp->loops[insp->loopCounter]->workColor = (int*) malloc (setSize * sizeof(int)); 
+	//insp->loops[insp->loopCounter]->workColor = (int*) malloc (setSize * sizeof(int));
 	
     // add the parloop to each tile of the inspector
 	for (int i = 0; i < insp->ntiles; i++)
@@ -405,3 +508,5 @@ int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
 		
 	return INSPOP_OK;
 }
+
+

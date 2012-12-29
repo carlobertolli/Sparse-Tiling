@@ -26,8 +26,8 @@ int main ()
     
     int partSize	= 5;
 	
-    int nloops      = 2;
-    int seqSize     = 2;
+    int nloops      = 3;
+    int seqSize     = 3;
     
 	//input
 	int e2v[] = { 0,1 , 1,2 , 2,3 , 3,4 , 0,5 , 5,10, 1,6 , 6,11 , 2,7 , 7,12 , 3,8 , 8,13 , 4,9 , 9,14 , 5,6 , 6,7 , 7,8 , 8,9 , 10,11 , 11,12 , 12,13, 13,14 };
@@ -41,21 +41,28 @@ int main ()
 	printf("Partitioned and colored...!\n");
 	printInspector ( insp );
 	
-	printf("Adding a loop over edges..");
+	printf("Adding a first loop over edges..");
 	addParLoop ( insp, "edges", edges, e2v, edgeMapEntries );
 	printf("Done!\n");
 	printInspector ( insp );
 	
-    printf("Adding a loop over cells..");
+    printf("Adding a second loop over cells..");
 	addParLoop ( insp, "cells", cells, c2v, cellsMapEntries );
 	printf("Done!\n");
 	printInspector ( insp );
 	
+    printf("Adding a third loop over edges, like the first one..");
+	addParLoop ( insp, "edges", edges, e2v, edgeMapEntries );
+	printf("Done!\n");
+	printInspector ( insp );
+	
+    
 	//scanning the ficticious loop on edges, using e2v to reference the vertex (base) base
 	printf("Running the inspector..");
 	int* sequence = (int*) malloc ( nloops * sizeof(int));
 	sequence[0] = 0;
     sequence[1] = 1;
+    sequence[2] = 0;
 	int res = runInspector (insp, 0, sequence, seqSize);
 	printf("Done!\n");
 	
