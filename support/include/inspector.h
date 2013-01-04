@@ -19,10 +19,10 @@
  *
  */
 typedef struct {
-  char* loopname;		//name/identified of the parloop
-  int setSize;			//size of the iteration set
-  int* indMap;			//indirect map to the renumbered base set
-  int mapSize;			//size of indMap
+  char* loopname; //name/identified of the parloop
+  int setSize; //size of the iteration set
+  int* indMap; //indirect map to the renumbered base set
+  int mapSize; //size of indMap
   
 } loop_t;
 
@@ -30,23 +30,23 @@ typedef struct {
  *
  */
 typedef struct {
-  int size;					   //size of the base set
-  int* v2pOrig;			 //v2p mapping given by metis 
-  int* colOrig;			 //current color for each element of v2p
+  int size;  //size of the base set
+  int* v2pOrig;	//v2p mapping given by metis 
+  int* colOrig;	//current color for each element of v2p
   
-  int ncolors;			  //total number of colors determined by the inspector
-  int* p2c;					   //mapping from partitions to colors
+  int ncolors;	//total number of colors determined by the inspector
+  int* p2c;	 //mapping from partitions to colors
   
-  int ntiles;				  //number of tiles for this inspector
-  tile_t** tiles;	 //tiles of the inspector
+  int ntiles;	 //number of tiles for this inspector
+  tile_t** tiles;	//tiles of the inspector
   
-  int nloops;				  //number of loops crossed 
-  loop_t** loops;	 //loops crossed 
+  int nloops; //number of loops crossed 
+  loop_t** loops;	//loops crossed 
   int loopCounter; //count the number of loops currently add to the inspector
   
-  int* p2v;		  		 	//mapping from partitions to vertices
-  int* v2v;			   		//mapping from v to v in p2v 
-  int* partSize;		 //initial size of the tiles. The size is ntiles
+  int* p2v;	//mapping from partitions to vertices
+  int* v2v; //mapping from v to v in p2v 
+  int* partSize; //initial size of the tiles. The size is ntiles
   
 } inspector_t;
 

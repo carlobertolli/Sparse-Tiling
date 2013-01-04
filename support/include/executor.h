@@ -13,18 +13,18 @@
 #define ALLCOLORS 2
 
 #define EXEC_OK 1
-#define EXEC_NOMORECOLORS	0
+#define EXEC_NOMORECOLORS 0
 #define EXEC_ERR -1
 
 typedef struct {
   tile_t** tiles;
   
   int ncolors;
-  int	ntiles;
+  int ntiles;
   int* c2p;
   int* offset;
   
-  int computedColors;	//keep track of the number of colors computed [0, ncolors]
+  int computedColors; //keep track of the number of colors computed [0, ncolors]
   
 } executor_t;
 
