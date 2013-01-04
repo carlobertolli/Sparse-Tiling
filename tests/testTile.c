@@ -69,7 +69,7 @@ int main ()
   //scanning the ficticious loop on edges, using e2v to reference the vertex (base) base
   printf("Running the inspector..");
   
-  int res = runInspector (insp, 0);
+  int res = runInspector (insp, 1);
   printf("Done!\n");
   
   if ( res != INSPOP_OK )

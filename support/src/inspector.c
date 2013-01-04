@@ -313,7 +313,7 @@ int runInspector (inspector_t* insp, int baseSetIndex)
       //then, we iterate over its adjacent base set elements (vertices?)
       for (int i = 0; i < step; i++)
       {
-        newColor = MIN (entityColor, workVertices[startLoop->indMap[e * step + i]]);
+        newColor = MAX (entityColor, workVertices[startLoop->indMap[e * step + i]]);
         
         if (newColor != workVertices[startLoop->indMap[e * step + i]])
         {

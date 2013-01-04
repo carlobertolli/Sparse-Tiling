@@ -41,10 +41,10 @@ typedef struct {
   tile_t** tiles;	//tiles of the inspector
   
   int nloops; //number of loops crossed 
-  loop_t** loops;	//loops crossed 
+  loop_t** loops; //loops crossed 
   int loopCounter; //count the number of loops currently add to the inspector
   
-  int* p2v;	//mapping from partitions to vertices
+  int* p2v; //mapping from partitions to vertices
   int* v2v; //mapping from v to v in p2v 
   int* partSize; //initial size of the tiles. The size is ntiles
   
