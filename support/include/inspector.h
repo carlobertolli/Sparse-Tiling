@@ -20,9 +20,9 @@
  */
 typedef struct {
   char* loopname; //name/identified of the parloop
-  int setSize; //size of the iteration set
-  int* indMap; //indirect map to the renumbered base set
-  int mapSize; //size of indMap
+  int setSize;    //size of the iteration set
+  int* indMap;    //indirect map to the renumbered base set
+  int mapSize;    //size of indMap
   
 } loop_t;
 
@@ -56,12 +56,12 @@ typedef struct {
  * Initialize a new inspector with a certain number of tiles
  *
  * input:
- * partSize : partition size requested
- * baseset	: size of the baseset
- * loops		: loops crossed by the inspector
+ * partSize   : partition size requested
+ * baseset    : size of the baseset
+ * loops      : loops crossed by the inspector
  *
  * output:
- * inspector: a new inspector
+ * inspector  : a new inspector
  */
 inspector_t* initInspector (int baseset, int partSize, int loops);
 
@@ -75,8 +75,8 @@ void freeInspector (inspector_t* insp);
  * Parallel loop have been previously added to the inspector by means of addParLoop
  * 
  * input:
- * insp						    : inspector
- * baseSetIndex		: starting point of the coloring [0, insp->nloops - 1)
+ * insp           : inspector
+ * baseSetIndex   : starting point of the coloring [0, insp->nloops - 1)
  * 
  */
 int runInspector (inspector_t* insp, int baseSetIndex);
@@ -90,10 +90,10 @@ int runInspector (inspector_t* insp, int baseSetIndex);
  *
  * input:
  * insp           : inspector
- * loopname			   	: string identifying the parallel loop
- * setSize				    : size of the iteration set
+ * loopname       : string identifying the parallel loop
+ * setSize        : size of the iteration set
  * indirectionMap : indirect map used by the loop to access the base set
- * mapSize				    : size of indirectionMap
+ * mapSize        : size of indirectionMap
  *
  */
 int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirectionMap, int mapSize);
