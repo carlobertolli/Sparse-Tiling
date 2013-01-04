@@ -9,12 +9,12 @@
 
 #include "inspector.h"
 
-#define SINGLECOLOR		1
-#define ALLCOLORS			2
+#define SINGLECOLOR	1
+#define ALLCOLORS 2
 
-#define EXEC_OK						1
+#define EXEC_OK 1
 #define EXEC_NOMORECOLORS	0
-#define EXEC_ERR					-1
+#define EXEC_ERR -1
 
 typedef struct {
   tile_t** tiles;

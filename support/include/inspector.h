@@ -10,10 +10,10 @@
 
 #include "tile.h"
 
-#define INSPOP_OK							     1
-#define	INSPOP_MAXLOOP				   0
-#define INSPOP_WRONGPAR				  -1
-#define INSPOP_NOTENAUGHLOOP	-2
+#define INSPOP_OK 1
+#define	INSPOP_MAXLOOP	0
+#define INSPOP_WRONGPAR -1
+#define INSPOP_NOTENAUGHLOOP -2
 
 /* This struct contains information about a specific par loop
  *

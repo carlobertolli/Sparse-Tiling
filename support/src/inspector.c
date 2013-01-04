@@ -15,12 +15,12 @@
 
 /* input:
  * vertices		: #vertices
- * nparts			: number of partitions requested to metis
- * xadj				: vertices offsets in adjncy - standard CSR format
- * adjncy			: v2v mapping - standard CSR format
+ * nparts			 : number of partitions requested to metis
+ * xadj				  : vertices offsets in adjncy - standard CSR format
+ * adjncy		 	: v2v mapping - standard CSR format
  * 
  * output:
- * *part			: part[i] == partition of vertex 1, computed by metis
+ * *part			  : part[i] == partition of vertex 1, computed by metis
  */
 int metisPartition (int vertices, int _nparts, idx_t* xadj, idx_t* adjncy, int** part)
 {
