@@ -30,23 +30,23 @@ typedef struct {
  *
  */
 typedef struct {
-  int size;					//size of the base set
-  int* v2pOrig;			//v2p mapping given by metis 
-  int* colOrig;			//current color for each element of v2p
+  int size;					   //size of the base set
+  int* v2pOrig;			 //v2p mapping given by metis 
+  int* colOrig;			 //current color for each element of v2p
   
-  int ncolors;			//total number of colors determined by the inspector
-  int* p2c;					//mapping from partitions to colors
+  int ncolors;			  //total number of colors determined by the inspector
+  int* p2c;					   //mapping from partitions to colors
   
-  int ntiles;				//number of tiles for this inspector
-  tile_t** tiles;		//tiles of the inspector
+  int ntiles;				  //number of tiles for this inspector
+  tile_t** tiles;	 //tiles of the inspector
   
-  int nloops;				//number of loops crossed 
-  loop_t** loops;		//loops crossed 
-  int loopCounter;	//count the number of loops currently add to the inspector
+  int nloops;				  //number of loops crossed 
+  loop_t** loops;	 //loops crossed 
+  int loopCounter; //count the number of loops currently add to the inspector
   
-  int* p2v;					//mapping from partitions to vertices
-  int* v2v;					//mapping from v to v in p2v 
-  int* partSize;		//initial size of the tiles. The size is ntiles
+  int* p2v;		  		 	//mapping from partitions to vertices
+  int* v2v;			   		//mapping from v to v in p2v 
+  int* partSize;		 //initial size of the tiles. The size is ntiles
   
 } inspector_t;
 
@@ -75,32 +75,28 @@ void freeInspector (inspector_t* insp);
  * Parallel loop have been previously added to the inspector by means of addParLoop
  * 
  * input:
- * insp						: inspector
- * baseSetIndex		: starting point of the coloring [0, seqSize - 1)
- * sequence				: sequence of parloops to be tiled
- * seqSize				: size of sequence
+ * insp						    : inspector
+ * baseSetIndex		: starting point of the coloring [0, insp->nloops - 1)
  * 
  */
-int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize);
+int runInspector (inspector_t* insp, int baseSetIndex);
 
 /*
  * Add a parallel loop to the inspector 
- * This way the inspector is aware of the characteristics of the parloops is going to tile.
- * Notion of parloop equivalence: two parloops are considered equivalent by the tiling inspector iff:
- * - they iterate over the same iteration set
- * - they use the same indirection mapping to access the base set
+ * This way the inspector get to know the characteristics of the parloops is going to tile.
  *
  * IMPORTANT: the sequence of par loops in the OP2 code MUST match the sequence of addParLoop invokations (i.e. same ordering)  
  * IMPORTANT: all calls to addParLoop must be made before the call to runInspector
  *
  * input:
- * loopname				: unique identifier for the parallel loop
- * setSize				: size of the iteration set
+ * insp           : inspector
+ * loopname			   	: string identifying the parallel loop
+ * setSize				    : size of the iteration set
  * indirectionMap : indirect map used by the loop to access the base set
- * mapSize				: size of indirectionMap
+ * mapSize				    : size of indirectionMap
  *
  */
-int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirectionMap, int mapSize );
+int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirectionMap, int mapSize);
 
 /*
  * This function can be called just once after the inspector initialization.

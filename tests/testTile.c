@@ -36,7 +36,6 @@ int main ()
   int partSize	= 5;
   
   int nloops    = 3;
-  int seqSize   = 3;
   
   //input
   int e2v[] = { 0,1 , 1,2 , 2,3 , 3,4 , 0,5 , 5,10, 1,6 , 6,11 , 2,7 , 7,12 , 3,8 , 8,13 , 4,9 , 9,14 , 5,6 , 6,7 , 7,8 , 8,9 , 10,11 , 11,12 , 12,13, 13,14 };
@@ -69,11 +68,8 @@ int main ()
   
   //scanning the ficticious loop on edges, using e2v to reference the vertex (base) base
   printf("Running the inspector..");
-  int* sequence = (int*) malloc ( nloops * sizeof(int));
-  sequence[0] = 0;
-  sequence[1] = 1;
-  sequence[2] = 0;
-  int res = runInspector (insp, 0, sequence, seqSize);
+  
+  int res = runInspector (insp, 0);
   printf("Done!\n");
   
   if ( res != INSPOP_OK )
@@ -87,8 +83,6 @@ int main ()
       printTile (insp->tiles[i]);
     
   }
-  
-  free (sequence);
   
   printf("***** TESTING EXECUTOR *****\n");
   

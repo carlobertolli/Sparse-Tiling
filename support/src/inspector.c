@@ -213,10 +213,9 @@ void doMinColor (tile_t** tiles, int* v2p, int* baseSetColors, int setSize, int*
 }
 
 
-int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSize)
+int runInspector (inspector_t* insp, int baseSetIndex)
 {
-  
-  if (baseSetIndex >= seqSize)
+  if (baseSetIndex >= insp->nloops - 1)
     return INSPOP_WRONGPAR;
   
   if (insp->loopCounter < 2 || insp->nloops != insp->loopCounter)
@@ -241,9 +240,9 @@ int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSiz
   // COLORING
   
   // A) proceed coloring - FORWARD
-  for (int s = baseSetIndex + 1; s < seqSize; s++)
+  for (int s = baseSetIndex + 1; s < insp->nloops; s++)
   {
-    loop_t* startLoop = insp->loops[sequence[s]];
+    loop_t* startLoop = insp->loops[s];
     
     // 1) color the loop
     doMaxColor (insp->tiles, workVerticesPartition, workVertices, startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, s);
@@ -294,7 +293,7 @@ int runInspector (inspector_t* insp, int baseSetIndex, int* sequence, int seqSiz
   //3) proceed coloring - BACKWARD
   for (int s = baseSetIndex; s >= 0; s--)
   {
-    loop_t* startLoop = insp->loops[sequence[s]];
+    loop_t* startLoop = insp->loops[s];
     
     // 1) color the loop
     doMinColor (insp->tiles, workVerticesPartition, workVertices, startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, s);
@@ -363,7 +362,7 @@ int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirection
   
   insp->loops[insp->loopCounter]->loopname = strdup (loopname);
   insp->loops[insp->loopCounter]->setSize  = setSize;
-  insp->loops[insp->loopCounter]->indMap	  = renumberedMap; // TODO: renumberedMap;
+  insp->loops[insp->loopCounter]->indMap	  = renumberedMap; 
   insp->loops[insp->loopCounter]->mapSize	 = mapSize;
   //insp->loops[insp->loopCounter]->workColor = (int*) malloc (setSize * sizeof(int));
   
@@ -481,7 +480,7 @@ int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
   //useful for executor
   insp->ncolors = ncolors;
   insp->p2c = colors; 
-    
+  
   // create a mapping from the original base set to the new positions in the renumbered base set. This is useful to renumber all mapppings in game.
   int* mappingFunction = (int*) malloc (insp->size * sizeof(int));
   baseMapping (insp->p2v, insp->size, mappingFunction);
@@ -496,7 +495,7 @@ int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
   
   for (int i = 1; i <= insp->ntiles; i++ )
     offset[i] = insp->partSize[i - 1] + offset[i - 1];
-
+  
   // colors
   for (int b = 0; b < insp->ntiles; b++ )
   {
@@ -508,15 +507,15 @@ int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize)
   newDomain (v2p, insp->size, insp->v2v, insp->v2pOrig);
   
   /*
-  for ( int i = 0; i < insp->size; i++ ){
-    printf("%d\t", v2p[i]);
-  }
-  printf("\n");
-  for ( int i = 0; i < insp->size; i++ ){
-    printf("%d\t", insp->v2pOrig[i]);
-  }
-  printf("\n");
-  */
+   for ( int i = 0; i < insp->size; i++ ){
+   printf("%d\t", v2p[i]);
+   }
+   printf("\n");
+   for ( int i = 0; i < insp->size; i++ ){
+   printf("%d\t", insp->v2pOrig[i]);
+   }
+   printf("\n");
+   */
   
   free (offset);
   
