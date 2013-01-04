@@ -14,14 +14,14 @@
 #define TILEOP_TOOMANYELEMS		-1
 
 typedef struct {
-	int ID;										//Unique identifier of the tile 
-	int nloops;								//total number of parallel loops crossed by the tile 
-	int* element[MAXLOOPS];		//iteration set, for each par loop
-	int size[MAXLOOPS];				//size of the iteration set, for each par loop
-
-	int curSize[MAXLOOPS];		//current number of elementes added per loop 
-	
-	char* loopname[MAXLOOPS];
+  int ID;	                 //Unique identifier of the tile
+  int nloops;              //total number of parallel loops crossed by the tile
+  int* element[MAXLOOPS];  //iteration set, for each par loop
+  int size[MAXLOOPS];	     //size of the iteration set, for each par loop
+  
+  int curSize[MAXLOOPS];   //current number of elements added per loop
+  
+  char* loopname[MAXLOOPS];
 } tile_t;
 
 
@@ -44,6 +44,11 @@ int addElement (tile_t* tile, int loop, int el);
  * It is important to specify the correct (upper bound of the) size of the iteration set iterated by the loop.  
  */
 int addLoop (tile_t* tile, int size, char* setName);
+
+/*
+ * Run an entire tile
+ */
+int runTile (tile_t* tile);
 
 /*
  * Destroy a tile

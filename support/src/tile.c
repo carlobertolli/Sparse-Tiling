@@ -9,7 +9,7 @@
 
 tile_t* createTile ()
 {
-	static int tileID = 0; // tile identifier, initially set to 0 and incremented each time a tile is created
+  static int tileID = 0; // tile identifier, initially set to 0 and incremented each time a tile is created
 	
 	tile_t* tile = (tile_t*) malloc ( sizeof(tile_t) );
 	tile->nloops = 0;
@@ -23,9 +23,9 @@ tile_t* createTile ()
 
 int addElement (tile_t* tile, int loop, int el)
 {
-    if (tile->curSize[loop] + 1 > tile->size[loop])
-        return TILEOP_TOOMANYELEMS;
-    
+  if (tile->curSize[loop] + 1 > tile->size[loop])
+    return TILEOP_TOOMANYELEMS;
+  
 	tile->element[loop][tile->curSize[loop]] = el; //add the element to the proper (loop, offset) in the tile 
 	tile->curSize[loop]++;
 	
@@ -34,15 +34,30 @@ int addElement (tile_t* tile, int loop, int el)
 
 int addLoop (tile_t* tile, int size, char* setName)
 {
-    if (tile->nloops + 1 == MAXLOOPS)
-		return TILEOP_TOOMANYLOOPS;
-    
+  if (tile->nloops + 1 == MAXLOOPS)
+    return TILEOP_TOOMANYLOOPS;
+  
 	tile->loopname[tile->nloops] = setName;
 	tile->size[tile->nloops] = size;
 	tile->element[tile->nloops] = (int*) malloc (size * sizeof(int)); 
 	
 	tile->nloops++;
 	return TILEOP_OK;
+}
+
+int runTile (tile_t* tile)
+{
+	printf ("Executing Tile %d\n", tile->ID);
+	for (int i = 0; i < tile->nloops; i++)
+	{
+		printf("Executing Loop %d over %s\n\tExecuted element: ", i, tile->loopname[i]);
+		for (int j = 0; j < tile->size[i]; j++)
+			printf("%d ", tile->element[i][j] );
+		printf("\n");
+		
+	}
+	
+	return 0;
 }
 
 void freeTile (tile_t* tile)
@@ -55,8 +70,8 @@ void freeTile (tile_t* tile)
 
 void printTile (tile_t* tile)
 {
-	printf("Tile ID: \t\t%d\n", tile->ID);
-	printf("Number of loops crossed : \t%d\n", tile->nloops);
+	printf("Tile ID: %d\n", tile->ID);
+	printf("Number of loops crossed : %d\n", tile->nloops);
 	
 	if (! tile->nloops )
 	{
