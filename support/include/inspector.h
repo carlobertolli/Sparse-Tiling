@@ -30,23 +30,23 @@ typedef struct {
  *
  */
 typedef struct {
-  int size;  //size of the base set
-  int* v2pOrig;	//v2p mapping given by metis 
-  int* colOrig;	//current color for each element of v2p
+  int size;         //size of the base set
+  int* v2pOrig;     //v2p mapping given by metis 
+  int* colOrig;     //current color for each element of v2p
   
-  int ncolors;	//total number of colors determined by the inspector
-  int* p2c;	 //mapping from partitions to colors
+  int ncolors;      //total number of colors determined by the inspector
+  int* p2c;         //mapping from partitions to colors
   
-  int ntiles;	 //number of tiles for this inspector
-  tile_t** tiles;	//tiles of the inspector
+  int ntiles;       //number of tiles for this inspector
+  tile_t** tiles;   //tiles of the inspector
   
-  int nloops; //number of loops crossed 
-  loop_t** loops; //loops crossed 
-  int loopCounter; //count the number of loops currently add to the inspector
+  int nloops;       //number of loops crossed 
+  loop_t** loops;   //loops crossed 
+  int loopCounter;  //count the number of loops currently add to the inspector
   
-  int* p2v; //mapping from partitions to vertices
-  int* v2v; //mapping from v to v in p2v 
-  int* partSize; //initial size of the tiles. The size is ntiles
+  int* p2v;         //mapping from partitions to vertices
+  int* v2v;         //mapping from v to v in p2v 
+  int* partSize;    //initial size of the tiles. The size is ntiles
   
 } inspector_t;
 
@@ -103,14 +103,14 @@ int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirection
  * Take the vertex set, partition and color it. 
  *
  * input:
- * insp				: an initialized inspector
- * vertices		: #vertices
- * e2v				: standard map e2v
- * mapsize		: size of the mapping e2v
+ * insp       : an initialized inspector
+ * vertices   : #vertices
+ * e2v        : standard map e2v
+ * mapsize    : size of the mapping e2v
  * 
  * output:
- * partitions	: vertex -> partitionID
- * colors			: partitionID -> color 
+ * partitions : vertex -> partitionID
+ * colors     : partitionID -> color 
  */
 int partitionAndColor (inspector_t* insp, int vertices, int* e2v, int mapsize);
 
