@@ -90,6 +90,8 @@ int main ()
 		
   printExecutor (exec);
   
+  execute (exec, ALLCOLORS );
+  
   freeInspector (insp);
   freeExecutor (exec);
   

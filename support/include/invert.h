@@ -1,7 +1,7 @@
 #ifndef _INVERT_H_
 #define _INVERT_H_
 
-#define DEBUG	1
+#define DEBUG	0
 
 #include <stdlib.h>
 #include <strings.h>

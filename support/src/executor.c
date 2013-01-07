@@ -33,16 +33,17 @@ int execute (executor_t* exec, int ncolors)
   if (exec->computedColors + 1 > exec->ncolors)
     return EXEC_NOMORECOLORS;
   
-  if (ncolors != SINGLECOLOR || ncolors != ALLCOLORS)
+  if (ncolors != SINGLECOLOR && ncolors != ALLCOLORS)
     return EXEC_ERR;
   
   int colorsToCompute = (ncolors == ALLCOLORS) ? exec->ncolors : 1;
   
+  //for each colour, it executes all tiles 
   for (int i = 0; i < colorsToCompute; i++)
   {
     int curColor = exec->computedColors;
-    for (int j = 0; j < (exec->offset[curColor + 1] - exec->offset[curColor]); j++ )
-      runTile (exec->tiles[exec->c2p[exec->offset[curColor] + j]]);
+    for (int j = exec->offset[curColor]; j < exec->offset[curColor + 1]; j++ )
+      runTile (exec->tiles[exec->c2p[ j ]]);
     
     exec->computedColors++;
   }

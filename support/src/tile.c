@@ -47,11 +47,11 @@ int addLoop (tile_t* tile, int size, char* setName)
 
 int runTile (tile_t* tile)
 {
-  printf ("Executing Tile %d\n", tile->ID);
+  printf ("\nExecuting Tile %d\n", tile->ID);
   for (int i = 0; i < tile->nloops; i++)
   {
     printf("Executing Loop %d over %s\n\tExecuted element: ", i, tile->loopname[i]);
-    for (int j = 0; j < tile->size[i]; j++)
+    for (int j = 0; j < tile->curSize[i]; j++)
       printf("%d ", tile->element[i][j] );
     printf("\n");
     
