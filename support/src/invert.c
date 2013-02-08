@@ -1,18 +1,22 @@
 #include "invert.h"
 
-void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset  )
+void invertMapping (int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, int* y2x, int* y2adj, int* offset, int* maxIncidence)
 {
-  
   offset[0] = 0;
-  x_zero = ( x_zero ) ? 1 : 0; //takes into account x numbering starting from either 0 or 1
+  int incidence = 0;
+   
+  //takes into account x numbering starting from either 0 or 1
+  x_zero = ( x_zero ) ? 1 : 0; 
   
   //compute the offsets in y2x
   for ( int i = 0; i < size_x2y; i++ )
     offset[x2y[i] + x_zero] ++;
   
-  for ( int i = 1; i < ny; i++ )
+  for ( int i = 1; i < ny; i++ ) 
+  {
     offset[i + x_zero] += offset[i - 1  + x_zero];
-  
+    incidence = MAX (incidence, offset[i + x_zero] - offset[i - 1  + x_zero]);
+  }
   
 #if (DEBUG > 0) 
 	 for ( int i = 0; i < ny + 1; i++ )
@@ -50,6 +54,10 @@ void invertMapping ( int* x2y, int size_x2y, int ny, int onex_ny, int x_zero, in
   }
   
   free (inserted);
+  
+  //return
+  if (maxIncidence)
+    *maxIncidence = incidence;
 }
 
 

@@ -42,13 +42,13 @@ int main ()
   int c2v[] = { 0,1,5,6 , 1,2,6,7 , 2,3,7,8 , 3,4,8,9 , 5,6,10,11 , 6,7,11,12 , 7,8,12,13 , 8,9,13,14 };
   
   printf("***** TESTING INSPECTOR *****\n");
-  
+
   //compute coloring
   inspector_t* insp = initInspector (vertices, partSize, nloops);
-  
   partitionAndColor ( insp, vertices, e2v, edgeMapEntries );
   
   printf("Partitioned and colored...!\n");
+  
   printInspector ( insp );
   
   printf("Adding a first loop over edges..");
@@ -69,11 +69,15 @@ int main ()
   //scanning the ficticious loop on edges, using e2v to reference the vertex (base) base
   printf("Running the inspector..");
   
-  int res = runInspector (insp, 1);
+  int res = runInspector (insp, 0);
   printf("Done!\n");
   
-  if ( res != INSPOP_OK )
+  if ( res != INSPOP_OK ) {
     printf("...Problems occured when the inspector run\n");
+    if ( res == INSPOP_WRONGCOLOR )
+      printf("COLORING IS MESSED UP!\nExiting the program...");
+      return 0;
+  }
   else 
   {
     printInspector (insp);	

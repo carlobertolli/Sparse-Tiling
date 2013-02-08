@@ -23,7 +23,7 @@ executor_t* initExecutor (inspector_t* insp)
   exec->computedColors = 0;
   
   //get the inverse mapping from colors to partitions
-  invertMapping (insp->p2c, insp->ntiles, insp->ncolors, 1, 1, exec->c2p, NULL, exec->offset);
+  invertMapping (insp->p2c, insp->ntiles, insp->ncolors, 1, 1, exec->c2p, NULL, exec->offset, NULL);
   
   return exec;
 }

@@ -8,12 +8,17 @@
 #ifndef _INSPECTOR_H_
 #define _INSPECTOR_H_
 
+#define DEBUG 0
+
 #include "tile.h"
 
 #define INSPOP_OK 1
 #define	INSPOP_MAXLOOP	0
 #define INSPOP_WRONGPAR -1
 #define INSPOP_NOTENAUGHLOOP -2
+#define INSPOP_WRONGCOLOR -3
+
+#define LOOPNAMELENGTH 32
 
 /* This struct contains information about a specific par loop
  *
@@ -47,6 +52,8 @@ typedef struct {
   int* p2v;         //mapping from partitions to vertices
   int* v2v;         //mapping from v to v in p2v 
   int* partSize;    //initial size of the tiles. The size is ntiles
+  
+  int incidence;    //maximum incidence of the mesh
   
 } inspector_t;
 

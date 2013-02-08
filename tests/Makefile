@@ -5,12 +5,12 @@ INCLUDE = $(ST_INSTALL_PATH)/include
 
 CC		= gcc
 
-LFLAGS	= -lmetis
+LFLAGS	= -lmetis -lm 
 EXEC	= testPartitioningColoring
 
 CFLAGS	= -Wall -pedantic -std=c99  
 
-all: library testInvert testPartitioning testTile testSmallGraph
+all: library testInvert testPartitioning testTile 
 	
 library:
 	make -f $(ST_INSTALL_PATH)/Makefile

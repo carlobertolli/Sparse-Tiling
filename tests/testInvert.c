@@ -16,13 +16,13 @@ int main ()
 	int e2v[] = { 0,1 , 1,2 , 2,3 , 3,4 , 0,5 , 5,10, 1,6 , 6,11 , 2,7 , 7,12 , 3,8 , 8,13 , 4,9 , 9,14 , 5,6 , 6,7 , 7,8 , 8,9 , 10,11 , 11,12 , 12,13, 13,14 };
 	
 	//output
-	int* v2e 	= (int*) malloc ( mapEntries * sizeof(int) );
-	int* offset	= (int*) calloc ( vertices + 1, sizeof(int) ); 
+	int* v2e 	= (int*) malloc (mapEntries * sizeof(int));
+	int* offset	= (int*) calloc (vertices + 1, sizeof(int)); 
 	
-	int* adjncy = (int*) malloc ( mapEntries * sizeof(int) );
+	int* adjncy = (int*) malloc (mapEntries * sizeof(int));
 	
 	//invert mapping, i.e. creates v2e mapping
-	invertMapping ( e2v, mapEntries, vertices, 2, 1, v2e, adjncy, offset );
+	invertMapping (e2v, mapEntries, vertices, 2, 1, v2e, adjncy, offset, NULL);
 	
 	printf ( "v2e : [" );
 	for ( int i = 0; i < mapEntries; i++ )
