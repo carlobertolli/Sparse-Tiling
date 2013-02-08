@@ -19,6 +19,7 @@
 #define INSPOP_WRONGCOLOR -3
 
 #define LOOPNAMELENGTH 32
+#define DEBUGMSGLENGTH 128
 
 /* This struct contains information about a specific par loop
  *
@@ -54,6 +55,8 @@ typedef struct {
   int* partSize;    //initial size of the tiles. The size is ntiles
   
   int incidence;    //maximum incidence of the mesh
+  
+  char debug[DEBUGMSGLENGTH + LOOPNAMELENGTH]; 
   
 } inspector_t;
 

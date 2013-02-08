@@ -152,24 +152,48 @@ void freeInspector (inspector_t* insp)
   
 }
 
-int checkColor (int setSize, int* indMap, int mapSize, int* color, int* partition, int* verticesColor, int* verticesPartition)
+int checkColor (loop_t *loop, int *color, int *partition, int *verticesColor, int *verticesPartition, int *verticesAdjColor, int *verticesAdjPartition, int *incidence)
 {
+  //aliases
+  int setSize = loop->setSize;
+  int mapSize = loop->mapSize;
+  int *indMap = loop->indMap;
+  
   int step = mapSize / setSize;
   for (int e = 0; e < setSize; e++)
   {
     for (int i = 0; i < step; i++) 
     {
-      int adjv = indMap[e*step + i];
-      if (color[e] == verticesColor[adjv] && partition[e] != verticesPartition[adjv])
-        return INSPOP_WRONGCOLOR ;
+      //aliases
+      int currentVertex = indMap[e*step + i];
+      int currentColor = color[currentVertex];
+      int currentTile = partition[currentVertex];
+      
+      //if entity's color and partition are equal to current adjacent vertex's color and partition, that's fine and I skip the control
+      if (! (currentColor == verticesColor[currentVertex] && currentTile == verticesPartition[currentVertex]))
+      {
+        int currentIncidence = incidence[currentVertex];
+        for (int j = 0; j < currentIncidence; j++)
+        { 
+          //now I'm looking for entities adjacent to the current vertex that have same color, but different partition
+          //In that case, the coloring is messed up 
+          if (currentColor == verticesAdjColor[currentVertex + j] && currentTile == verticesAdjPartition[currentVertex + j])
+            return INSPOP_WRONGCOLOR;
+        }        
+      }
     }
   }
   
   return INSPOP_OK;
 }
 
-void doMaxColor (tile_t** tiles, int* v2p, int* baseSetColors, int setSize, int* indMap, int mapSize, int* color, int* partition, int loopID)
+void doMaxColor (tile_t** tiles, int* v2p, int* baseSetColors, loop_t *loop, int* color, int* partition, int loopID)
 {
+  //aliases
+  int setSize = loop->setSize;
+  int mapSize = loop->mapSize;
+  int *indMap = loop->indMap;
+
   int step = mapSize / setSize;
   for (int e = 0; e < setSize; e++)
   {
@@ -202,8 +226,13 @@ void doMaxColor (tile_t** tiles, int* v2p, int* baseSetColors, int setSize, int*
   }
 }
 
-void doMinColor (tile_t** tiles, int* v2p, int* baseSetColors, int setSize, int* indMap, int mapSize, int* color, int* partition, int loopID)
+void doMinColor (tile_t** tiles, int* v2p, int* baseSetColors, loop_t *loop, int* color, int* partition, int loopID)
 {
+  //aliases
+  int setSize = loop->setSize;
+  int mapSize = loop->mapSize;
+  int *indMap = loop->indMap;
+  
   int step = mapSize / setSize;
   for (int e = 0; e < setSize; e++)
   {
@@ -279,7 +308,7 @@ int runInspector (inspector_t* insp, int baseSetIndex)
     loop_t* startLoop = insp->loops[s];
     
     // 1) color the loop
-    doMaxColor (insp->tiles, workVerticesPartition, workVertices, startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, s);
+    doMaxColor (insp->tiles, workVerticesPartition, workVertices, startLoop, workLoopColor, workLoopPartition, s);
     
     // 2) prepare data for the subsequent loop coloring
     //set to -1 each entry of the vertex second color array
@@ -306,12 +335,22 @@ int runInspector (inspector_t* insp, int baseSetIndex)
           workVerticesPartition[currentVertex] = entityPartition;
         }
        
+        //storing the entity's color and partition in the target vertex local memory so that a vertex knows
+        //by which entity ('s color and partition) is touched. This is useful for checking the correctness of coloring
         verticesAdjacentColor[currentVertex*insp->incidence + inserted[currentVertex]] = entityColor;
         verticesAdjacentPartition[currentVertex*insp->incidence + inserted[currentVertex]] = entityPartition;
         inserted[currentVertex]++; 
       }
-    }    
-
+    }
+    
+    // 4) check coloring
+    int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted);
+    if (coloring != INSPOP_OK) 
+    {
+      snprintf (insp->debug, DEBUGMSGLENGTH + LOOPNAMELENGTH, "Coloring loop %s resulted in messing up colors", startLoop->loopname);
+      return INSPOP_WRONGCOLOR;
+    }
+    
 #if (DEBUG > 1)
     printf ("\nCOLORED ONWARDS\n");
     printf ("Vertices Second Colors: \n\t");
@@ -333,11 +372,6 @@ int runInspector (inspector_t* insp, int baseSetIndex)
 #endif
 
     memset (inserted, 0, insp->size * sizeof(int));
-
-    // 4) check coloring
-    /*int coloring = checkColor (startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, workVertices, workVerticesPartition);
-    if (! coloring) 
-      return INSPOP_WRONGCOLOR;*/ 
   }
     
   //reset base set values
@@ -350,7 +384,7 @@ int runInspector (inspector_t* insp, int baseSetIndex)
     loop_t* startLoop = insp->loops[s];
     
     // 1) color the loop
-    doMinColor (insp->tiles, workVerticesPartition, workVertices, startLoop->setSize, startLoop->indMap, startLoop->mapSize, workLoopColor, workLoopPartition, s);
+    doMinColor (insp->tiles, workVerticesPartition, workVertices, startLoop, workLoopColor, workLoopPartition, s);
     
     // 2) prepare data for the subsequent loop coloring
     //set to -1 each entry of the vertex second color array

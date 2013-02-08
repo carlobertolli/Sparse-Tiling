@@ -52,17 +52,17 @@ int main ()
   printInspector ( insp );
   
   printf("Adding a first loop over edges..");
-  addParLoop ( insp, "edges", edges, e2v, edgeMapEntries );
+  addParLoop ( insp, "edges1", edges, e2v, edgeMapEntries );
   printf("Done!\n");
   printInspector ( insp );
   
   printf("Adding a second loop over cells..");
-  addParLoop ( insp, "cells", cells, c2v, cellsMapEntries );
+  addParLoop ( insp, "cells1", cells, c2v, cellsMapEntries );
   printf("Done!\n");
   printInspector ( insp );
   
   printf("Adding a third loop over edges, like the first one..");
-  addParLoop ( insp, "edges", edges, e2v, edgeMapEntries );
+  addParLoop ( insp, "edges2", edges, e2v, edgeMapEntries );
   printf("Done!\n");
   printInspector ( insp );
   
@@ -73,10 +73,13 @@ int main ()
   printf("Done!\n");
   
   if ( res != INSPOP_OK ) {
-    printf("...Problems occured when the inspector run\n");
-    if ( res == INSPOP_WRONGCOLOR )
+    printf("Problems occured when the inspector run:\n");
+    if ( res == INSPOP_WRONGCOLOR ) 
+    {
+      printf("%s\n", insp->debug);
       printf("COLORING IS MESSED UP!\nExiting the program...");
       return 0;
+    }
   }
   else 
   {
