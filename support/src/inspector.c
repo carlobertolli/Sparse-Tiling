@@ -10,6 +10,12 @@
 #include "inspector.h"
 #include "invert.h"
 
+#if (DEBUG > 1)
+static void printColoring (inspector_t *insp, loop_t *loop, int *entityColor, int *entityTile,
+                           int *verticesSecondColor, int *verticesSecondTile, int *verticesAdjacentColor,
+                           int *verticesAdjacentPartition);
+#endif
+
 /* input:
  * vertices		: #vertices
  * nparts			 : number of partitions requested to metis
@@ -43,6 +49,41 @@ int metisPartition (int vertices, int _nparts, idx_t* xadj, idx_t* adjncy, int**
   return result;
 }
 
+#if (DEBUG > 1)
+static void printColoring (inspector_t *insp, loop_t *loop, int *entityColor, int *entityTile,
+                           int *verticesSecondColor, int *verticesSecondTile, int *verticesAdjacentColor,
+                           int *verticesAdjacentPartition)
+{
+  printf ("\nCOLORED ONWARDS\n");
+  
+  printf ("Entities Color: \n\t");
+  for (int i = 0; i < loop->setSize; i++)
+    printf ("%d ", entityColor[i]);
+  printf ("\n");
+  
+  printf ("Entities Tile: \n\t");
+  for (int i = 0; i < loop->setSize; i++)
+    printf ("%d ", entityTile[i]);
+  printf ("\n");
+  
+  printf ("Vertices Second Colors: \n\t");
+  for (int i = 0; i < insp->size; i++)
+    printf ("%d ", verticesSecondColor[i]);
+  printf ("\n");
+  
+  printf ("Vertices Second Tile: \n\t");
+  for (int i = 0; i < insp->size; i++)
+    printf ("%d ", verticesSecondTile[i]);
+  printf ("\n");
+  
+  printf ("Vertices Adjacent Colors and Partition: (Col, Part) \n\t");
+  for (int i = 0; i < insp->size; i++) {
+    for (int j = 0; j < insp->incidence; j++)
+      printf ("(%d, %d)   ", verticesAdjacentColor[i*insp->incidence + j], verticesAdjacentPartition[i*insp->incidence + j]);
+    printf("\n\t");
+  }
+}
+#endif
 
 void printInspector (inspector_t* insp)
 {
@@ -162,24 +203,26 @@ int checkColor (loop_t *loop, int *color, int *partition, int *verticesColor, in
   int step = mapSize / setSize;
   for (int e = 0; e < setSize; e++)
   {
-    for (int i = 0; i < step; i++) 
+    for (int i = 0; i < step; i++)
     {
-      //aliases
+      
       int currentVertex = indMap[e*step + i];
-      int currentColor = color[currentVertex];
-      int currentTile = partition[currentVertex];
       
       //if entity's color and partition are equal to current adjacent vertex's color and partition, that's fine and I skip the control
-      if (! (currentColor == verticesColor[currentVertex] && currentTile == verticesPartition[currentVertex]))
+      if (! (color[e] == verticesColor[currentVertex] && partition[e] == verticesPartition[currentVertex]))
       {
         int currentIncidence = incidence[currentVertex];
         for (int j = 0; j < currentIncidence; j++)
         { 
           //now I'm looking for entities adjacent to the current vertex that have same color, but different partition
           //In that case, the coloring is messed up 
-          if (currentColor == verticesAdjColor[currentVertex + j] && currentTile == verticesAdjPartition[currentVertex + j])
+          if (color[e] == verticesAdjColor[currentVertex + j] && partition[e] != verticesAdjPartition[currentVertex + j])
+          {
+            snprintf (loop->debug, DEBUGMSGLENGTH, "(%d, %d, %d) found (%d, %d) through adjacent vertex %d",
+                      e, color[e], partition[e], verticesAdjColor[currentVertex + j], verticesAdjPartition[currentVertex + j], currentVertex);
             return INSPOP_WRONGCOLOR;
-        }        
+          }
+        }
       }
     }
   }
@@ -343,33 +386,17 @@ int runInspector (inspector_t* insp, int baseSetIndex)
       }
     }
     
+#if (DEBUG > 1)
+    printColoring (insp, startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition);
+#endif
+    
     // 4) check coloring
     int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted);
     if (coloring != INSPOP_OK) 
     {
-      snprintf (insp->debug, DEBUGMSGLENGTH + LOOPNAMELENGTH, "Coloring loop %s resulted in messing up colors", startLoop->loopname);
+      snprintf (insp->debug, DEBUGMSGLENGTH + LOOPNAMELENGTH, "Coloring loop %s resulted in messing up colors\n%s", startLoop->loopname, startLoop->debug);
       return INSPOP_WRONGCOLOR;
     }
-    
-#if (DEBUG > 1)
-    printf ("\nCOLORED ONWARDS\n");
-    printf ("Vertices Second Colors: \n\t");
-    for (int i = 0; i < insp->size; i++)
-      printf ("%d ", workVertices[i]);
-    printf ("\n");
-    
-    printf ("Vertices Second Partition: \n\t");
-    for (int i = 0; i < insp->size; i++)
-      printf ("%d ", workVerticesPartition[i]);
-    printf ("\n");
-    
-    printf ("Vertices Adjacent Colors and Partition: (Col, Part) \n\t");
-    for (int i = 0; i < insp->size; i++) {
-      for (int j = 0; j < insp->incidence; j++)
-        printf ("(%d, %d)   ", verticesAdjacentColor[i*insp->incidence + j], verticesAdjacentPartition[i*insp->incidence + j]);
-      printf("\n\t");
-    }
-#endif
 
     memset (inserted, 0, insp->size * sizeof(int));
   }
@@ -417,24 +444,7 @@ int runInspector (inspector_t* insp, int baseSetIndex)
     }
     
 #if (DEBUG > 1)
-    printf ("\nCOLORED BACKWARD\n");
-    printf ("Vertices Second Colors: \n\t");
-    for (int i = 0; i < insp->size; i++)
-      printf ("%d ", workVertices[i]);
-    printf ("\n");
-    
-    printf ("Vertices Second Partition: \n\t");
-    for (int i = 0; i < insp->size; i++)
-      printf ("%d ", workVerticesPartition[i]);
-    printf ("\n");
-    
-    printf ("Vertices Adjacent Colors and Partition: (Col, Part) \n\t");
-    for (int i = 0; i < insp->size; i++) {
-      for (int j = 0; j < insp->incidence; j++)
-        printf ("(%d, %d)   ", verticesAdjacentColor[i*insp->incidence + j], verticesAdjacentPartition[i*insp->incidence + j]);
-      printf("\n\t");
-    }
-    printf ("\n\n");
+    printColoring (insp, startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition);
 #endif
     
     memset (inserted, 0, insp->size * sizeof(int));

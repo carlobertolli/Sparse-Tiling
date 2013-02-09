@@ -8,7 +8,7 @@
 #ifndef _INSPECTOR_H_
 #define _INSPECTOR_H_
 
-#define DEBUG 0
+#define DEBUG 3
 
 #include "tile.h"
 
@@ -25,10 +25,12 @@
  *
  */
 typedef struct {
-  char* loopname; //name/identified of the parloop
+  char* loopname; //name/identifier of the parloop
   int setSize;    //size of the iteration set
   int* indMap;    //indirect map to the renumbered base set
   int mapSize;    //size of indMap
+  
+  char debug[DEBUGMSGLENGTH];
   
 } loop_t;
 
@@ -56,7 +58,7 @@ typedef struct {
   
   int incidence;    //maximum incidence of the mesh
   
-  char debug[DEBUGMSGLENGTH + LOOPNAMELENGTH]; 
+  char debug[DEBUGMSGLENGTH*2 + LOOPNAMELENGTH];
   
 } inspector_t;
 
