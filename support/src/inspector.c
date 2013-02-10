@@ -10,11 +10,14 @@
 #include "inspector.h"
 #include "invert.h"
 
+static int checkColor (loop_t *loop, const int *color, const int *partition, const int *verticesColor, const int *verticesPartition, const int *verticesAdjColor, const int *verticesAdjPartition, const int *incidence, int maxIncidence);
+
 #if (DEBUG > 1)
 static void printColoring (inspector_t *insp, loop_t *loop, int *entityColor, int *entityTile,
                            int *verticesSecondColor, int *verticesSecondTile, int *verticesAdjacentColor,
                            int *verticesAdjacentPartition);
 #endif
+
 
 /* input:
  * vertices		: #vertices
@@ -193,7 +196,7 @@ void freeInspector (inspector_t* insp)
   
 }
 
-int checkColor (loop_t *loop, int *color, int *partition, int *verticesColor, int *verticesPartition, int *verticesAdjColor, int *verticesAdjPartition, int *incidence)
+static int checkColor (loop_t *loop, const int *color, const int *partition, const int *verticesColor, const int *verticesPartition, const int *verticesAdjColor, const int *verticesAdjPartition, const int *incidence, int maxIncidence)
 {
   //aliases
   int setSize = loop->setSize;
@@ -203,23 +206,25 @@ int checkColor (loop_t *loop, int *color, int *partition, int *verticesColor, in
   int step = mapSize / setSize;
   for (int e = 0; e < setSize; e++)
   {
+    //aliases
+    int entityColor = color[e];
+    int entityTile = partition[e];
     for (int i = 0; i < step; i++)
     {
-      
       int currentVertex = indMap[e*step + i];
       
       //if entity's color and partition are equal to current adjacent vertex's color and partition, that's fine and I skip the control
-      if (! (color[e] == verticesColor[currentVertex] && partition[e] == verticesPartition[currentVertex]))
+      if (! (entityColor == verticesColor[currentVertex] && entityTile == verticesPartition[currentVertex]))
       {
         int currentIncidence = incidence[currentVertex];
         for (int j = 0; j < currentIncidence; j++)
         { 
           //now I'm looking for entities adjacent to the current vertex that have same color, but different partition
-          //In that case, the coloring is messed up 
-          if (color[e] == verticesAdjColor[currentVertex + j] && partition[e] != verticesAdjPartition[currentVertex + j])
+          //In that case, the coloring is messed up
+          if (entityColor == verticesAdjColor[currentVertex*maxIncidence + j] && entityTile != verticesAdjPartition[currentVertex*maxIncidence + j])
           {
             snprintf (loop->debug, DEBUGMSGLENGTH, "(%d, %d, %d) found (%d, %d) through adjacent vertex %d",
-                      e, color[e], partition[e], verticesAdjColor[currentVertex + j], verticesAdjPartition[currentVertex + j], currentVertex);
+                      e, entityColor, entityTile, verticesAdjColor[currentVertex*maxIncidence + j], verticesAdjPartition[currentVertex*maxIncidence + j], currentVertex);
             return INSPOP_WRONGCOLOR;
           }
         }
@@ -391,13 +396,21 @@ int runInspector (inspector_t* insp, int baseSetIndex)
 #endif
     
     // 4) check coloring
-    int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted);
+    int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted, insp->incidence);
     if (coloring != INSPOP_OK) 
     {
       snprintf (insp->debug, DEBUGMSGLENGTH + LOOPNAMELENGTH, "Coloring loop %s resulted in messing up colors\n%s", startLoop->loopname, startLoop->debug);
       return INSPOP_WRONGCOLOR;
     }
 
+#if (DEBUG > 1)
+    for (int i = 0; i < insp->size * insp->incidence; i++)
+    {
+      verticesAdjacentColor[i] = -1;
+      verticesAdjacentPartition[i] = -1;
+    }
+#endif
+    
     memset (inserted, 0, insp->size * sizeof(int));
   }
     
@@ -447,10 +460,25 @@ int runInspector (inspector_t* insp, int baseSetIndex)
     printColoring (insp, startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition);
 #endif
     
+    // 4) check coloring
+    int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted, insp->incidence);
+    if (coloring != INSPOP_OK)
+    {
+      snprintf (insp->debug, DEBUGMSGLENGTH + LOOPNAMELENGTH, "Coloring loop %s resulted in messing up colors\n%s", startLoop->loopname, startLoop->debug);
+      return INSPOP_WRONGCOLOR;
+    }
+
+#if (DEBUG > 1)
+    for (int i = 0; i < insp->size * insp->incidence; i++)
+    {
+      verticesAdjacentColor[i] = -1;
+      verticesAdjacentPartition[i] = -1;
+    }
+#endif
+    
     memset (inserted, 0, insp->size * sizeof(int));
 
   }
-  
   
   // free work array
   free (inserted);
