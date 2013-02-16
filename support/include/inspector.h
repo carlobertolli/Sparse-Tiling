@@ -8,7 +8,7 @@
 #ifndef _INSPECTOR_H_
 #define _INSPECTOR_H_
 
-#define DEBUG 3
+#define DEBUG 0
 
 #include "tile.h"
 

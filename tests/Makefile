@@ -10,7 +10,7 @@ EXEC	= testPartitioningColoring
 
 CFLAGS	= -Wall -pedantic -std=c99  
 
-all: library testInvert testPartitioning testTile 
+all: library testInvert testPartitioning testTile testSmallGraph testVtu 
 	
 library:
 	make -f $(ST_INSTALL_PATH)/Makefile
@@ -27,5 +27,7 @@ testTile:
 testSmallGraph:
 	$(CC) $(CFLAGS) -I$(INCLUDE) testSmallGraph.c $(SUPPORT)/libst_op2.a $(LFLAGS) -o test_2
 	
+testVtu:
+	$(CC) $(CFLAGS) -I$(INCLUDE) testVtu.c $(SUPPORT)/libst_op2.a $(LFLAGS) -o test_vtu
 clean:
 	rm -rf invert partition_color test_1 test_2 *~

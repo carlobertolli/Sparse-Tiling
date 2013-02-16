@@ -66,9 +66,9 @@ directories:
 # implementation, but our own implementation
 st-op2: $(ST_OP2_SRC)/invert.c $(ST_OP2_SRC)/inspector.c $(ST_OP2_SRC)/tile.c $(ST_OP2_SRC)/executor.c\
 	directories
-	$(CC) $(CFLAGS) -I$(ST_OP2_INC) -c $(ST_OP2_SRC)/invert.c $(ST_OP2_SRC)/tile.c $(ST_OP2_SRC)/inspector.c $(ST_OP2_SRC)/executor.c 
+	$(CC) $(CFLAGS) -I$(ST_OP2_INC) -c $(ST_OP2_SRC)/invert.c $(ST_OP2_SRC)/tile.c $(ST_OP2_SRC)/inspector.c $(ST_OP2_SRC)/executor.c $(ST_OP2_SRC)/plotmesh.c
 	mv *.o $(ST_OP2_OBJ)/
-	ar -r $(ST_OP2_LIB)/libst_op2.a $(ST_OP2_OBJ)/invert.o $(ST_OP2_OBJ)/inspector.o $(ST_OP2_OBJ)/executor.o $(ST_OP2_OBJ)/tile.o
+	ar -r $(ST_OP2_LIB)/libst_op2.a $(ST_OP2_OBJ)/invert.o $(ST_OP2_OBJ)/inspector.o $(ST_OP2_OBJ)/executor.o $(ST_OP2_OBJ)/tile.o $(ST_OP2_OBJ)/plotmesh.o
 
 clean:
 	-rm -if $(ST_OP2_OBJ)/*.o

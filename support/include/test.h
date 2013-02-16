@@ -9,6 +9,7 @@
 #include "executor.h"
 #include "inspector.h"
 #include "invert.h"
+#include "plotmesh.h"
 
 int metisPartition ( int nvertices, int _nparts, idx_t* xadj, idx_t* adjncy, int** part  );
 void printInspector (inspector_t* insp);
