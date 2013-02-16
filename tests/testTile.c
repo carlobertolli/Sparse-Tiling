@@ -49,22 +49,22 @@ int main ()
   
   printf("Partitioned and colored...!\n");
   
-  printInspector ( insp );
+  printInspector (insp);
   
   printf("Adding a first loop over edges..");
-  addParLoop ( insp, "edges1", edges, e2v, edgeMapEntries );
+  addParLoop (insp, "edges1", edges, e2v, edgeMapEntries);
   printf("Done!\n");
   printInspector ( insp );
   
   printf("Adding a second loop over cells..");
-  addParLoop ( insp, "cells1", cells, c2v, cellsMapEntries );
+  addParLoop (insp, "cells1", cells, c2v, cellsMapEntries);
   printf("Done!\n");
-  printInspector ( insp );
+  printInspector (insp);
   
   printf("Adding a third loop over edges, like the first one..");
-  addParLoop ( insp, "edges2", edges, e2v, edgeMapEntries );
+  addParLoop (insp, "edges2", edges, e2v, edgeMapEntries);
   printf("Done!\n");
-  printInspector ( insp );
+  printInspector (insp);
   
   //scanning the ficticious loop on edges, using e2v to reference the vertex (base) base
   printf("Running the inspector..");
