@@ -1,4 +1,7 @@
-/* Example VTK format 
+/* 
+ EDGES COLOR VTK FILE:
+ 
+ Example VTK format
  # vtk DataFile Version 1.0
  Coloring edges
  ASCII
@@ -18,6 +21,29 @@
  SCALARS pressure int
  LOOKUP_TABLE default
  0.0
+ 0.0
+ 1.0
+ 
+ CELLS COLOR VRK FILE:
+ 
+ # vtk DataFile Version 1.0
+ Coloring cells
+ ASCII
+ 
+ DATASET POLYDATA
+ POINTS 4 float
+ 0.0 0.0 0.0
+ 1.0 0.0 0.0
+ 0.0 1.0 0.0
+ 1.0 1.0 0.0
+ 
+ POLYGONS 2 8
+ 3 0 1 2
+ 3 1 2 3
+ 
+ CELL_DATA 2
+ SCALARS pressure float
+ LOOKUP_TABLE default
  0.0
  1.0
 */
@@ -45,6 +71,7 @@ vtu_mesh_t* createVtuMesh (int vertices, int edges, int cells, int* coordinates,
 
 int printVtuFile (inspector_t* insp, vtu_mesh_t* mesh)
 {
+#ifdef VTK_ON
   // aliases
   int* coord = mesh->coordinates;
   int vertices = mesh->nvertices;
@@ -62,12 +89,12 @@ int printVtuFile (inspector_t* insp, vtu_mesh_t* mesh)
     
     FILE* f = fopen (filename, "w");
   
-    // print header
+    // 1) print header
     fprintf (f, "# vtk DataFile Version 1.0\n");
     fprintf (f, "Coloring %s\n", loop->loopname);
     fprintf (f, "ASCII\n\n");
     
-    // print vertices
+    // 2) print vertices
     fprintf (f, "DATASET POLYDATA\n");
     fprintf (f, "POINTS %d int\n", vertices);
     for (int j = 0; j < vertices; j++)
@@ -79,8 +106,8 @@ int printVtuFile (inspector_t* insp, vtu_mesh_t* mesh)
         fprintf (f, " %d\n", coord[j*dim + 2]);
     }
     
-    // print edges or cells
-    int step;
+    // 3) print edges or cells
+    int step, size;
     if ( (step = loop->mapSize / loop->setSize) == 2)
     {
       //print edges
@@ -89,6 +116,7 @@ int printVtuFile (inspector_t* insp, vtu_mesh_t* mesh)
       {
         fprintf (f, "2 %d %d\n", mesh->e2v[j*step], mesh->e2v[j*step + 1]);
       }
+      size = edges;
     }
     if ( (step = loop->mapSize / loop->setSize) == 3)
     {
@@ -98,6 +126,7 @@ int printVtuFile (inspector_t* insp, vtu_mesh_t* mesh)
       {
         fprintf (f, "3 %d %d %d\n", mesh->c2v[j*step], mesh->c2v[j*step + 1], mesh->c2v[j*step + 2]);
       }
+      size = cells;
     }
     if ( (step = loop->mapSize / loop->setSize) == 4)
     {
@@ -107,14 +136,26 @@ int printVtuFile (inspector_t* insp, vtu_mesh_t* mesh)
       {
         fprintf (f, "4 %d %d %d %d\n", mesh->c2v[j*step], mesh->c2v[j*step + 1], mesh->c2v[j*step + 2], mesh->c2v[j*step + 3]);
       }
+      size = cells;
     }
     
+    // 4) print colors
+    fprintf (f, "\nCELL_DATA %d\n", size);
+    fprintf (f, "SCALARS colors int\n");
+    fprintf (f, "LOOKUP_TABLE default\n");
+    for (int j = 0; j < size; j++)
+      fprintf (f, "%d\n", loop->setColor[j]);
     
-  
     fclose (f);
   }
-  
+
   return VTK_OK;
+
+#else
+  printf ("VTK-File generation is enabled in debugging mode only.Compile the library with -DVTK_ON and try again.\n");
+  return VTK_UNDEF;
+#endif
+
 }
 
 void freeVtuMesh (vtu_mesh_t* mesh)

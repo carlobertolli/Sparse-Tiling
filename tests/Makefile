@@ -13,7 +13,7 @@ CFLAGS	= -Wall -pedantic -std=c99
 all: library testInvert testPartitioning testTile testSmallGraph testVtu 
 	
 library:
-	make -f $(ST_INSTALL_PATH)/Makefile
+	make -f $(ST_INSTALL_PATH)/Makefile VTK=ON
 
 testInvert:
 	$(CC) $(CFLAGS) -I$(INCLUDE) testInvert.c $(SUPPORT)/libst_op2.a $(LFLAGS) -o invert

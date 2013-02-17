@@ -30,6 +30,10 @@ typedef struct {
   int* indMap;    //indirect map to the renumbered base set
   int mapSize;    //size of indMap
   
+#ifdef VTK_ON
+  int* setColor;  //array of colors, one for each element of the set
+#endif
+  
   char debug[DEBUGMSGLENGTH];
   
 } loop_t;

@@ -177,8 +177,10 @@ void freeInspector (inspector_t* insp)
   for (int i = 0; i < insp->loopCounter; i++)
   {
     //TODO: free (insp->loops[i]->indMap);
+#ifdef VTK_ON
+    free (insp->loops[i]->setColor);
+#endif
     free (insp->loops[i]->loopname);
-    //free (insp->loops[i]->workColor);
     free (insp->loops[i]);
   }
   
@@ -395,6 +397,11 @@ int runInspector (inspector_t* insp, int baseSetIndex)
     printColoring (insp, startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition);
 #endif
     
+#ifdef VTK_ON
+    // save loop color
+    memcpy (startLoop->setColor, workLoopColor, startLoop->setSize*sizeof(int));
+#endif
+    
     // 4) check coloring
     int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted, insp->incidence);
     if (coloring != INSPOP_OK) 
@@ -460,6 +467,11 @@ int runInspector (inspector_t* insp, int baseSetIndex)
     printColoring (insp, startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition);
 #endif
     
+#ifdef VTK_ON
+    // save loop color
+    memcpy (startLoop->setColor, workLoopColor, startLoop->setSize*sizeof(int));
+#endif
+    
     // 4) check coloring
     int coloring = checkColor (startLoop, workLoopColor, workLoopPartition, workVertices, workVerticesPartition, verticesAdjacentColor, verticesAdjacentPartition, inserted, insp->incidence);
     if (coloring != INSPOP_OK)
@@ -477,7 +489,6 @@ int runInspector (inspector_t* insp, int baseSetIndex)
 #endif
     
     memset (inserted, 0, insp->size * sizeof(int));
-
   }
   
   // free work array
@@ -511,6 +522,10 @@ int addParLoop (inspector_t* insp, char* loopname, int setSize, int* indirection
   insp->loops[insp->loopCounter]->indMap = renumberedMap; 
   insp->loops[insp->loopCounter]->mapSize = mapSize;
   //insp->loops[insp->loopCounter]->workColor = (int*) malloc (setSize * sizeof(int));
+  
+#ifdef VTK_ON
+  insp->loops[insp->loopCounter]->setColor = (int*) malloc (setSize*sizeof(int));
+#endif
   
   // add the parloop to each tile of the inspector
   for (int i = 0; i < insp->ntiles; i++)
